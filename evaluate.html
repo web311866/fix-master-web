@@ -417,6 +417,41 @@
       <div class="card-title"><span class="icon">💡</span> 改进建议</div>
       <div id="improvementSuggestions"></div>
     </div>
+    <!-- Revision Task Generation -->
+    <div class="card" id="revisionGenCard" style="border:2px solid #F59E0B;">
+      <div class="card-title"><span class="icon">🔄</span> 生成修订任务</div>
+      <p style="font-size:13px;color:#64748B;margin-bottom:12px;">基于评测结果，系统可自动将冲突转化为修订任务，推送至标注平台由专家审核后更新教材。</p>
+      <div id="revisionPreview" style="display:none;">
+        <div style="font-size:13px;font-weight:600;color:#1E293B;margin-bottom:8px;">📋 修订任务预览</div>
+        <div id="revisionPreviewList" style="margin-bottom:12px;"></div>
+        <div style="font-size:13px;font-weight:600;color:#1E293B;margin-bottom:8px;">选择修订模式</div>
+        <div style="display:flex;gap:12px;margin-bottom:16px;">
+          <div class="rev-mode-card" id="revModeQuick" onclick="selectRevMode('quick')" style="flex:1;padding:16px;border:2px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:center;transition:all .2s;">
+            <div style="font-size:24px;margin-bottom:6px;">📋</div>
+            <div style="font-size:13px;font-weight:600;color:#1E293B;">快速审核</div>
+            <div style="font-size:11px;color:#64748B;margin-top:2px;">逐条勾选确认</div>
+          </div>
+          <div class="rev-mode-card" id="revModeDialogue" onclick="selectRevMode('dialogue')" style="flex:1;padding:16px;border:2px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:center;transition:all .2s;">
+            <div style="font-size:24px;margin-bottom:6px;">💬</div>
+            <div style="font-size:13px;font-weight:600;color:#1E293B;">对话式修订</div>
+            <div style="font-size:11px;color:#64748B;margin-top:2px;">AI引导访谈</div>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btnGenRevision" onclick="generateRevisionTasks()" style="opacity:0.5;" disabled>生成修订任务并跳转标注平台 →</button>
+        </div>
+      </div>
+      <div id="revisionGenEmpty" style="text-align:center;padding:16px;">
+        <button class="btn btn-secondary" onclick="previewRevisionTasks()">预览修订任务</button>
+      </div>
+      <div id="revisionGenerated" style="display:none;">
+        <div style="display:flex;align-items:center;gap:8px;padding:12px;background:#ECFDF5;border-radius:8px;margin-bottom:8px;">
+          <span style="color:#10B981;font-size:16px;">✅</span>
+          <span style="font-size:13px;color:#065F46;font-weight:500;">修订任务已生成并推送至标注平台</span>
+        </div>
+        <div style="font-size:12px;color:#64748B;">跳转到 <a href="index.html" style="color:#3B82F6;text-decoration:underline;">教材标注平台</a> 查看和处理修订任务</div>
+      </div>
+    </div>
     <div class="btn-group">
       <button class="btn btn-secondary" onclick="goStep(6)">回看详情</button>
       <button class="btn btn-success" onclick="startNewEval()">评测下一个故障 →</button>
@@ -1129,6 +1164,114 @@ function showToast(msg, type) {
   toast.innerHTML = `<span>${icons[type] || ''}</span> ${msg}`;
   container.appendChild(toast);
   setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+}
+
+// ==================== REVISION TASK GENERATION ====================
+let selectedRevMode = null;
+
+function previewRevisionTasks() {
+  const tasks = buildRevisionTasks();
+  if (tasks.length === 0) {
+    showToast('本次评测未发现冲突，无需生成修订任务', 'success');
+    document.getElementById('revisionGenCard').style.display = 'none';
+    return;
+  }
+  document.getElementById('revisionGenEmpty').style.display = 'none';
+  document.getElementById('revisionPreview').style.display = 'block';
+  
+  const list = document.getElementById('revisionPreviewList');
+  const rootTasks = tasks.filter(t => t.type === 'root');
+  const pathTasks = tasks.filter(t => t.type === 'path');
+
+  let html = '';
+  if (rootTasks.length > 0) {
+    html += `<div style="font-size:12px;color:#EF4444;font-weight:600;margin-bottom:6px;">根因相关（${rootTasks.length}条）</div>`;
+    rootTasks.forEach((t, i) => {
+      html += `<div style="padding:6px 10px;background:#FEF2F2;border-radius:6px;margin-bottom:4px;font-size:12px;color:#991B1B;">
+        ${i+1}. [${t.actionLabel}] ${t.title}</div>`;
+    });
+  }
+  if (pathTasks.length > 0) {
+    html += `<div style="font-size:12px;color:#F59E0B;font-weight:600;margin:8px 0 6px;">路径相关（${pathTasks.length}条）</div>`;
+    pathTasks.forEach((t, i) => {
+      html += `<div style="padding:6px 10px;background:#FFFBEB;border-radius:6px;margin-bottom:4px;font-size:12px;color:#92400E;">
+        ${i+1}. [${t.actionLabel}] ${t.title}</div>`;
+    });
+  }
+  list.innerHTML = html;
+}
+
+function buildRevisionTasks() {
+  const tasks = [];
+  if (!currentReport) return tasks;
+
+  // Root cause conflicts
+  Object.values(rcAnnotations).forEach(anno => {
+    const rc = currentReport.rootCauses.find(r => r.id === anno.rootCauseId);
+    if (!rc) return;
+    if (anno.verdict === 'incorrect') {
+      tasks.push({
+        type: 'root', typeLabel: '根因冲突', action: 'modify',
+        actionLabel: '修改', title: `"${rc.content}"标记为错误根因`,
+        evidence: `评测专家标注为错误根因。理由：${anno.reason || '无'}`,
+        suggestion: anno.correction || ''
+      });
+    } else if (anno.verdict === 'unnecessary') {
+      tasks.push({
+        type: 'root', typeLabel: '根因冲突', action: 'delete',
+        actionLabel: '删除', title: `"${rc.content}"标记为非必要根因`,
+        evidence: `评测专家标注为非必要根因。理由：${anno.reason || '无'}`,
+        suggestion: ''
+      });
+    }
+  });
+
+  // Missing root causes
+  missingRootCauses.forEach(m => {
+    tasks.push({
+      type: 'root', typeLabel: '根因冲突', action: 'add',
+      actionLabel: '新增', title: `遗漏根因"${m.content}"`,
+      evidence: `评测专家补充。必要性：${m.necessity || '无'}`,
+      suggestion: m.content
+    });
+  });
+
+  // Path conflicts
+  Object.values(tsAnnotations).forEach(anno => {
+    const step = currentReport.troubleshootingSteps.find(s => s.id === anno.stepId);
+    if (!step || anno.verdict !== 'incorrect') return;
+    const errorTypeLabels = {
+      sequence_error: '顺序错误', condition_error: '条件错误',
+      missing_step: '遗漏步骤', redundant_step: '冗余步骤', conclusion_error: '结论错误'
+    };
+    tasks.push({
+      type: 'path', typeLabel: '路径冲突', action: 'modify',
+      actionLabel: errorTypeLabels[anno.errorType] || '路径修改',
+      title: `步骤${step.stepNumber} "${step.title}" - ${errorTypeLabels[anno.errorType] || '错误'}`,
+      evidence: `评测专家标注。详细说明：${anno.detail || '无'}`,
+      suggestion: anno.correctPath || ''
+    });
+  });
+
+  return tasks;
+}
+
+function selectRevMode(mode) {
+  selectedRevMode = mode;
+  document.getElementById('revModeQuick').style.borderColor = mode === 'quick' ? '#3B82F6' : '#E2E8F0';
+  document.getElementById('revModeQuick').style.background = mode === 'quick' ? '#EFF6FF' : '#fff';
+  document.getElementById('revModeDialogue').style.borderColor = mode === 'dialogue' ? '#3B82F6' : '#E2E8F0';
+  document.getElementById('revModeDialogue').style.background = mode === 'dialogue' ? '#EFF6FF' : '#fff';
+  const btn = document.getElementById('btnGenRevision');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+function generateRevisionTasks() {
+  if (!selectedRevMode) { showToast('请先选择修订模式', 'warning'); return; }
+  document.getElementById('revisionPreview').style.display = 'none';
+  document.getElementById('revisionGenerated').style.display = 'block';
+  showToast(`已生成修订任务，将使用${selectedRevMode === 'quick' ? '快速审核' : '对话式修订'}模式处理`, 'success');
 }
 
 // ==================== INIT ====================

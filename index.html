@@ -742,6 +742,163 @@
       .layer-header { flex-direction: column; gap: 12px; }
       .category-grid { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* ===== Revision Panel & Dialogue Revision ===== */
+    .revision-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200;
+      display: none; align-items: center; justify-content: center;
+      animation: fadeIn .2s;
+    }
+    .revision-overlay.show { display: flex; }
+    .revision-panel {
+      background: var(--bg-secondary); border-radius: var(--radius-lg);
+      width: 92%; max-width: 960px; max-height: 85vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .revision-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; border-bottom: 1px solid var(--border-primary);
+    }
+    .revision-header h3 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .revision-close {
+      width: 32px; height: 32px; border-radius: 8px; border: none;
+      background: var(--bg-input); cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center; transition: var(--transition);
+    }
+    .revision-close:hover { background: var(--accent-red-dim); color: var(--accent-red); }
+    .revision-body { flex: 1; overflow: hidden; display: flex; }
+
+    /* Revision Task List (left) */
+    .revision-task-list {
+      width: 240px; border-right: 1px solid var(--border-primary);
+      overflow-y: auto; padding: 12px;
+    }
+    .revision-task-item {
+      padding: 10px 12px; border-radius: 8px; cursor: pointer;
+      margin-bottom: 6px; transition: var(--transition);
+      border: 1px solid transparent;
+    }
+    .revision-task-item:hover { background: var(--bg-input); }
+    .revision-task-item.active { background: var(--accent-blue-dim, rgba(79,110,247,0.08)); border-color: var(--accent-blue); }
+    .revision-task-item.done { opacity: 0.5; }
+    .rti-type { font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; display: inline-block; margin-bottom: 4px; }
+    .rti-type.root { background: #FEF2F2; color: #EF4444; }
+    .rti-type.path { background: #FFFBEB; color: #F59E0B; }
+    .rti-type.assoc { background: #EFF6FF; color: #3B82F6; }
+    .rti-title { font-size: 12px; font-weight: 500; color: var(--text-primary); line-height: 1.4; }
+    .rti-status { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .revision-task-summary { padding: 12px; border-top: 1px solid var(--border-primary); font-size: 12px; color: var(--text-secondary); }
+
+    /* Revision Content (right) - quick review mode */
+    .revision-content {
+      flex: 1; overflow-y: auto; padding: 20px 24px;
+    }
+    .rev-section { margin-bottom: 20px; }
+    .rev-section-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .rev-evidence {
+      background: var(--bg-input); border-radius: 8px; padding: 12px;
+      font-size: 12px; color: var(--text-secondary); line-height: 1.7;
+      border-left: 3px solid var(--accent-orange);
+    }
+    .rev-suggestion {
+      background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px;
+      padding: 12px; margin-top: 10px;
+    }
+    .rev-suggestion-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+    .rev-suggestion-label { font-weight: 600; color: #1E40AF; white-space: nowrap; min-width: 48px; }
+    .rev-suggestion-value { color: #1E293B; }
+    .rev-suggestion-value.del { text-decoration: line-through; color: var(--accent-red); }
+    .rev-suggestion-value.add { color: var(--accent-green); }
+    .rev-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .rev-btn { padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border-primary); transition: var(--transition); }
+    .rev-btn-accept { background: var(--accent-green); color: #fff; border-color: var(--accent-green); }
+    .rev-btn-accept:hover { background: #16a34a; }
+    .rev-btn-reject { background: var(--accent-red); color: #fff; border-color: var(--accent-red); }
+    .rev-btn-reject:hover { background: #dc2626; }
+    .rev-btn-modify { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+    .rev-btn-modify:hover { background: #3b5de7; }
+
+    /* Dialogue Revision Mode */
+    .dialogue-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .dialogue-messages { flex: 1; overflow-y: auto; padding: 20px 24px; }
+    .dlg-msg { margin-bottom: 16px; display: flex; gap: 10px; }
+    .dlg-msg.ai { flex-direction: row; }
+    .dlg-msg.user { flex-direction: row-reverse; }
+    .dlg-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600;
+    }
+    .dlg-avatar.ai-avatar { background: linear-gradient(135deg, #4f6ef7, #8b5cf6); color: #fff; }
+    .dlg-avatar.user-avatar { background: var(--accent-blue); color: #fff; }
+    .dlg-bubble {
+      max-width: 75%; padding: 12px 16px; border-radius: 12px;
+      font-size: 13px; line-height: 1.7;
+    }
+    .dlg-msg.ai .dlg-bubble { background: var(--bg-input); color: var(--text-primary); border-bottom-left-radius: 4px; }
+    .dlg-msg.user .dlg-bubble { background: var(--accent-blue); color: #fff; border-bottom-right-radius: 4px; }
+    .dlg-evidence-block {
+      background: #FFF7ED; border: 1px solid #FDBA74; border-radius: 8px;
+      padding: 10px; margin: 8px 0; font-size: 12px; color: #92400E; line-height: 1.6;
+    }
+    .dlg-suggestion-block {
+      background: #EFF6FF; border: 1px solid #93C5FD; border-radius: 8px;
+      padding: 10px; margin: 8px 0; font-size: 12px; line-height: 1.6;
+    }
+    .dlg-inline-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .dlg-inline-btn {
+      padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+      cursor: pointer; border: none; transition: var(--transition);
+    }
+    .dlg-confirm-btn { background: var(--accent-green); color: #fff; }
+    .dlg-confirm-btn:hover { background: #16a34a; }
+    .dlg-adjust-btn { background: var(--accent-blue); color: #fff; }
+    .dlg-adjust-btn:hover { background: #3b5de7; }
+    .dlg-reject-btn { background: #F1F5F9; color: #64748B; border: 1px solid #E2E8F0; }
+    .dlg-reject-btn:hover { background: #E2E8F0; }
+
+    .dialogue-input-area {
+      border-top: 1px solid var(--border-primary); padding: 12px 24px;
+      display: flex; gap: 8px; align-items: center;
+    }
+    .dialogue-input {
+      flex: 1; border: 1px solid var(--border-primary); border-radius: 8px;
+      padding: 10px 14px; font-size: 13px; outline: none; font-family: inherit;
+      background: var(--bg-input); color: var(--text-primary);
+      transition: var(--transition);
+    }
+    .dialogue-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79,110,247,0.1); }
+    .dialogue-send {
+      width: 40px; height: 40px; border-radius: 8px; border: none;
+      background: var(--accent-blue); color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: var(--transition);
+    }
+    .dialogue-send:hover { background: #3b5de7; }
+    .dialogue-shortcuts {
+      border-top: 1px solid var(--border-primary); padding: 8px 24px;
+      display: flex; gap: 8px;
+    }
+    .dlg-shortcut-btn {
+      padding: 4px 10px; border-radius: 6px; font-size: 11px;
+      background: var(--bg-input); border: 1px solid var(--border-primary);
+      color: var(--text-secondary); cursor: pointer; transition: var(--transition);
+    }
+    .dlg-shortcut-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+
+    /* Mode selector in revision */
+    .mode-selector { display: flex; gap: 12px; margin: 16px 0; }
+    .mode-card {
+      flex: 1; padding: 20px; border: 2px solid var(--border-primary);
+      border-radius: 12px; cursor: pointer; transition: var(--transition);
+      text-align: center;
+    }
+    .mode-card:hover { border-color: var(--accent-blue); }
+    .mode-card.selected { border-color: var(--accent-blue); background: rgba(79,110,247,0.05); }
+    .mode-card-icon { font-size: 28px; margin-bottom: 8px; }
+    .mode-card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .mode-card-desc { font-size: 12px; color: var(--text-secondary); }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
 </head>
 <body>
@@ -753,6 +910,12 @@
         <span class="header-subtitle">Expert Annotation Studio</span>
       </div>
       <div class="header-right">
+        <a href="evaluate.html" style="font-size:13px;color:var(--text-secondary);text-decoration:none;padding:6px 12px;border-radius:6px;transition:var(--transition);">教材评测</a>
+        <button id="btnRevisionTasks" onclick="showRevisionPanel()" style="position:relative;display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;background:var(--accent-orange-dim);color:var(--accent-orange);border:1px solid rgba(245,158,11,0.2);cursor:pointer;transition:var(--transition);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          修订任务
+          <span id="revisionBadge" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--accent-red);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">0</span>
+        </button>
         <span class="header-badge badge-ai">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           AI 辅助生成
@@ -1107,6 +1270,23 @@
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Revision Panel Overlay -->
+    <div class="revision-overlay" id="revisionOverlay" onclick="if(event.target===this)closeRevisionPanel()">
+      <div class="revision-panel">
+        <div class="revision-header">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            修订任务 - 评测反馈处理
+          </h3>
+          <button class="revision-close" onclick="closeRevisionPanel()">&times;</button>
+        </div>
+        <div class="revision-body">
+          <div class="revision-task-list"></div>
+          <div class="revision-content"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -1736,8 +1916,382 @@
       goToStep(4); switchLayer(1); renderLayer1(); renderLayer2(); renderLayer3();
     });
 
-    // Init
-    updateCompletedFaults();
+    // ===== Revision Tasks & Dialogue Revision =====
+    const revisionTasks = [
+      { id: 'r1', type: 'root', typeLabel: '根因冲突', priority: 'high', faultName: '液压系统行走无力', title: '"液压主泵故障"标记为错误根因', evidence: '在3次智能体会话中，该根因均被排除，实际故障点在行走马达溢流阀。评测专家标注：该根因过于笼统，应修改为更具体的描述。', suggestion: { action: 'modify', target: '根因#5: 液压主泵故障', original: '液压主泵故障', suggested: '液压主泵功率控制阀磨损' }, status: 'pending' },
+      { id: 'r2', type: 'root', typeLabel: '根因冲突', priority: 'medium', faultName: '液压系统行走无力', title: '遗漏根因"行走制动阀未完全释放"', evidence: '会话案例中出现了冲洗阀导致的行走无力，但教材根因列表中没有这一条。评测专家补充：制动阀卡滞会导致持续制动，表现为行走无力。', suggestion: { action: 'add', target: '新增根因', original: '', suggested: '行走制动阀未完全释放（常见于8吨以上机型）' }, status: 'pending' },
+      { id: 'r3', type: 'path', typeLabel: '路径冲突', priority: 'high', faultName: '液压系统行走无力', title: '步骤3顺序错误：应先检查先导压力', evidence: '在未确认是单侧故障还是双侧故障时，直接拆解溢流阀效率低。评测专家标注：应先进行左右压力对比测试。', suggestion: { action: 'modify', target: '步骤3: 检查主泵压力', original: '步骤3: 检查主泵压力 → 通过→步骤4 / 失败→步骤5', suggested: '步骤3: 检查行走先导压力\n  ├─ 若正常 → 步骤4: 检查主泵压力\n  └─ 若不足 → 步骤4\': 排查先导油路' }, status: 'pending' },
+      { id: 'r4', type: 'root', typeLabel: '根因冲突', priority: 'low', faultName: '液压系统行走无力', title: '"液压油污染或变质"标记为非必要', evidence: '本次故障已确认为机械故障而非油液问题，概率极低。', suggestion: { action: 'delete', target: '根因#10: 液压油污染或变质', original: '液压油污染或变质', suggested: '' }, status: 'pending' },
+      { id: 'r5', type: 'path', typeLabel: '路径冲突', priority: 'medium', faultName: '液压系统行走无力', title: '步骤6冗余：检查液压油品质', evidence: '在已确认先导压力和溢流阀正常的情况下，检查油液品质是冗余步骤。', suggestion: { action: 'delete', target: '步骤6: 检查液压油品质', original: '步骤6: 检查液压油品质 → 化验分析', suggested: '删除此步骤，替换为：检查中央回转接头油封' }, status: 'pending' }
+    ];
+
+    let revisionMode = null; // 'quick' | 'dialogue'
+    let currentRevTaskIdx = 0;
+    let dialogueMessages = [];
+
+    function updateRevisionBadge() {
+      const count = revisionTasks.filter(t => t.status === 'pending').length;
+      document.getElementById('revisionBadge').textContent = count;
+      document.getElementById('revisionBadge').style.display = count > 0 ? 'flex' : 'none';
+    }
+
+    function showRevisionPanel() {
+      updateRevisionBadge();
+      const overlay = document.getElementById('revisionOverlay');
+      overlay.classList.add('show');
+      renderRevisionModeSelect();
+    }
+
+    function closeRevisionPanel() {
+      document.getElementById('revisionOverlay').classList.remove('show');
+    }
+
+    function renderRevisionModeSelect() {
+      const content = document.querySelector('.revision-content');
+      const taskList = document.querySelector('.revision-task-list');
+      taskList.innerHTML = '';
+      taskList.style.display = 'none';
+      const pendingCount = revisionTasks.filter(t => t.status === 'pending').length;
+      content.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;">
+          <div style="font-size:40px;margin-bottom:12px;">📋</div>
+          <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;">修订任务</h3>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">来自评测平台的反馈，共 <strong style="color:var(--accent-orange);">${pendingCount}</strong> 处冲突待处理</p>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:24px;">请选择修订模式开始处理</p>
+          <div class="mode-selector" style="max-width:500px;margin:0 auto;">
+            <div class="mode-card ${revisionMode === 'quick' ? 'selected' : ''}" onclick="selectRevisionMode('quick')">
+              <div class="mode-card-icon">📋</div>
+              <div class="mode-card-title">快速审核</div>
+              <div class="mode-card-desc">逐条勾选确认<br>适合冲突少、修改明确的场景</div>
+            </div>
+            <div class="mode-card ${revisionMode === 'dialogue' ? 'selected' : ''}" onclick="selectRevisionMode('dialogue')">
+              <div class="mode-card-icon">💬</div>
+              <div class="mode-card-title">对话式修订</div>
+              <div class="mode-card-desc">AI引导式访谈<br>适合冲突多、需深入讨论的场景</div>
+            </div>
+          </div>
+          <button class="rev-btn rev-btn-accept" style="margin-top:20px;padding:10px 32px;" onclick="startRevision()" ${!revisionMode ? 'disabled style="opacity:0.5;margin-top:20px;padding:10px 32px;"' : ''}>
+            开始修订
+          </button>
+        </div>`;
+    }
+
+    function selectRevisionMode(mode) {
+      revisionMode = mode;
+      renderRevisionModeSelect();
+    }
+
+    function startRevision() {
+      if (!revisionMode) return;
+      currentRevTaskIdx = revisionTasks.findIndex(t => t.status === 'pending');
+      if (currentRevTaskIdx < 0) { showToast('所有修订任务已处理', 'success'); return; }
+      if (revisionMode === 'quick') renderQuickReview();
+      else renderDialogueRevision();
+    }
+
+    function renderTaskList() {
+      const taskList = document.querySelector('.revision-task-list');
+      taskList.style.display = 'block';
+      taskList.innerHTML = revisionTasks.map((t, i) => `
+        <div class="revision-task-item ${i === currentRevTaskIdx ? 'active' : ''} ${t.status !== 'pending' ? 'done' : ''}" onclick="jumpToTask(${i})">
+          <span class="rti-type ${t.type}">${t.typeLabel}</span>
+          <div class="rti-title">${t.title}</div>
+          <div class="rti-status">${t.status === 'pending' ? '⏳ 待处理' : t.status === 'accepted' ? '✅ 已接受' : t.status === 'rejected' ? '❌ 已拒绝' : '📝 已修改'}</div>
+        </div>`).join('') + `
+        <div class="revision-task-summary">
+          已确认: ${revisionTasks.filter(t => t.status !== 'pending').length} / ${revisionTasks.length}
+        </div>`;
+    }
+
+    function jumpToTask(idx) {
+      currentRevTaskIdx = idx;
+      if (revisionMode === 'quick') renderQuickReview();
+      else renderDialogueRevision();
+    }
+
+    // ===== Quick Review Mode =====
+    function renderQuickReview() {
+      renderTaskList();
+      const content = document.querySelector('.revision-content');
+      const task = revisionTasks[currentRevTaskIdx];
+      if (!task || task.status !== 'pending') {
+        const next = revisionTasks.findIndex(t => t.status === 'pending');
+        if (next < 0) { renderRevisionComplete(); return; }
+        currentRevTaskIdx = next;
+      }
+      const t = revisionTasks[currentRevTaskIdx];
+      const actionLabel = t.suggestion.action === 'delete' ? '删除' : t.suggestion.action === 'add' ? '新增' : '修改';
+      const actionColor = t.suggestion.action === 'delete' ? 'var(--accent-red)' : t.suggestion.action === 'add' ? 'var(--accent-green)' : 'var(--accent-blue)';
+      content.innerHTML = `
+        <div class="rev-section">
+          <div class="rev-section-title"><span class="rti-type ${t.type}">${t.typeLabel}</span> ${t.faultName} <span style="font-size:11px;color:var(--text-muted);">(${currentRevTaskIdx + 1}/${revisionTasks.length})</span></div>
+        </div>
+        <div class="rev-section">
+          <div class="rev-section-title">📎 评测证据</div>
+          <div class="rev-evidence">${t.evidence}</div>
+        </div>
+        <div class="rev-section">
+          <div class="rev-section-title">💡 修订建议</div>
+          <div class="rev-suggestion">
+            <div class="rev-suggestion-row"><span class="rev-suggestion-label">操作:</span><span class="rev-suggestion-value" style="color:${actionColor};font-weight:600;">${actionLabel}</span></div>
+            <div class="rev-suggestion-row"><span class="rev-suggestion-label">对象:</span><span class="rev-suggestion-value">${t.suggestion.target}</span></div>
+            ${t.suggestion.original ? `<div class="rev-suggestion-row"><span class="rev-suggestion-label">原文:</span><span class="rev-suggestion-value del">${t.suggestion.original}</span></div>` : ''}
+            ${t.suggestion.suggested ? `<div class="rev-suggestion-row"><span class="rev-suggestion-label">改为:</span><span class="rev-suggestion-value add">${t.suggestion.suggested.replace(/\n/g, '<br>')}</span></div>` : ''}
+          </div>
+        </div>
+        <div class="rev-actions">
+          <button class="rev-btn rev-btn-accept" onclick="acceptRevision('${t.id}')">✓ 接受</button>
+          <button class="rev-btn rev-btn-modify" onclick="modifyRevision('${t.id}')">✎ 修改后接受</button>
+          <button class="rev-btn rev-btn-reject" onclick="rejectRevision('${t.id}')">✗ 拒绝</button>
+        </div>`;
+    }
+
+    function acceptRevision(id) {
+      const task = revisionTasks.find(t => t.id === id);
+      if (task) task.status = 'accepted';
+      showToast('已接受修订建议', 'success');
+      advanceToNextTask();
+    }
+
+    function rejectRevision(id) {
+      const task = revisionTasks.find(t => t.id === id);
+      if (task) task.status = 'rejected';
+      showToast('已拒绝修订建议', 'warning');
+      advanceToNextTask();
+    }
+
+    function modifyRevision(id) {
+      const task = revisionTasks.find(t => t.id === id);
+      if (!task) return;
+      const newContent = prompt('请输入修改后的内容：', task.suggestion.suggested);
+      if (newContent !== null && newContent.trim()) {
+        task.suggestion.suggested = newContent.trim();
+        task.status = 'modified';
+        showToast('已修改并接受', 'success');
+        advanceToNextTask();
+      }
+    }
+
+    function advanceToNextTask() {
+      updateRevisionBadge();
+      renderTaskList();
+      const next = revisionTasks.findIndex(t => t.status === 'pending');
+      if (next < 0) { renderRevisionComplete(); return; }
+      currentRevTaskIdx = next;
+      if (revisionMode === 'quick') renderQuickReview();
+      else renderDialogueRevision();
+    }
+
+    function renderRevisionComplete() {
+      const content = document.querySelector('.revision-content');
+      const taskList = document.querySelector('.revision-task-list');
+      taskList.innerHTML = '';
+      const accepted = revisionTasks.filter(t => t.status === 'accepted' || t.status === 'modified').length;
+      const rejected = revisionTasks.filter(t => t.status === 'rejected').length;
+      content.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;">
+          <div style="font-size:48px;margin-bottom:12px;">✅</div>
+          <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;">修订审核完成</h3>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;">共处理 ${revisionTasks.length} 条修订任务</p>
+          <div style="display:flex;gap:16px;justify-content:center;margin-bottom:24px;">
+            <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:var(--accent-green);">${accepted}</div><div style="font-size:12px;color:var(--text-muted);">已接受</div></div>
+            <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:var(--accent-red);">${rejected}</div><div style="font-size:12px;color:var(--text-muted);">已拒绝</div></div>
+          </div>
+          <p style="font-size:12px;color:var(--accent-orange);margin-bottom:16px;">接受的修订将合并到教材中，教材版本号将更新</p>
+          <button class="rev-btn rev-btn-accept" style="padding:10px 24px;" onclick="mergeRevisions()">确认合并到教材</button>
+        </div>`;
+    }
+
+    function mergeRevisions() {
+      showToast('修订已合并到教材，版本号已更新', 'success');
+      closeRevisionPanel();
+    }
+
+    // ===== Dialogue Revision Mode =====
+    function renderDialogueRevision() {
+      renderTaskList();
+      const content = document.querySelector('.revision-content');
+      content.innerHTML = '';
+      content.style.padding = '0';
+
+      const dlgArea = document.createElement('div');
+      dlgArea.className = 'dialogue-area';
+      dlgArea.innerHTML = `
+        <div class="dialogue-messages" id="dlgMessages"></div>
+        <div class="dialogue-shortcuts">
+          <button class="dlg-shortcut-btn" onclick="dlgShortcut('回退上条')">↩ 回退上条</button>
+          <button class="dlg-shortcut-btn" onclick="dlgShortcut('查看原教材')">📖 查看原教材</button>
+          <button class="dlg-shortcut-btn" onclick="dlgShortcut('查看完整报告')">📄 查看完整报告</button>
+          <button class="dlg-shortcut-btn" onclick="dlgShortcut('跳过此条')">⏭ 跳过此条</button>
+        </div>
+        <div class="dialogue-input-area">
+          <input class="dialogue-input" id="dlgInput" placeholder="输入您的意见..." onkeydown="if(event.key==='Enter')sendDlgMsg()">
+          <button class="dialogue-send" onclick="sendDlgMsg()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>`;
+      content.appendChild(dlgArea);
+
+      dialogueMessages = [];
+      startDialogueForTask(currentRevTaskIdx);
+    }
+
+    function startDialogueForTask(idx) {
+      const task = revisionTasks[idx];
+      if (!task || task.status !== 'pending') {
+        const next = revisionTasks.findIndex(t => t.status === 'pending');
+        if (next < 0) { renderRevisionComplete(); return; }
+        currentRevTaskIdx = next;
+        startDialogueForTask(currentRevTaskIdx);
+        return;
+      }
+
+      const actionLabel = task.suggestion.action === 'delete' ? '删除' : task.suggestion.action === 'add' ? '新增' : '修改';
+      addDlgMsg('ai', `我们从评测反馈开始。<strong>${task.faultName}</strong>的教材中，评测发现${task.typeLabel}，先看这一条——`, false);
+      addDlgMsg('ai', `
+        <div class="dlg-evidence-block">
+          <strong>📋 评测标注：</strong>${task.title}<br>
+          <strong>📎 证据：</strong>${task.evidence}
+        </div>
+        <div class="dlg-suggestion-block">
+          <strong>💡 建议操作：</strong>${actionLabel}<br>
+          ${task.suggestion.original ? `<strong>原文：</strong>${task.suggestion.original}<br>` : ''}
+          ${task.suggestion.suggested ? `<strong>建议改为：</strong>${task.suggestion.suggested.replace(/\n/g, '<br>')}` : ''}
+        </div>
+        <div style="margin-top:8px;">您怎么看？${task.suggestion.action === 'delete' ? '是否确认删除？' : task.suggestion.action === 'add' ? '是否需要补充到教材中？' : '这个修改建议是否合理？'}</div>
+        <div class="dlg-inline-actions">
+          <button class="dlg-inline-btn dlg-confirm-btn" onclick="dlgConfirm()">确认</button>
+          <button class="dlg-inline-btn dlg-adjust-btn" onclick="dlgAdjust()">需要调整</button>
+          <button class="dlg-inline-btn dlg-reject-btn" onclick="dlgReject()">不同意</button>
+        </div>`, false);
+    }
+
+    function addDlgMsg(role, content, scroll = true) {
+      dialogueMessages.push({ role, content });
+      const container = document.getElementById('dlgMessages');
+      if (!container) return;
+      const msg = document.createElement('div');
+      msg.className = `dlg-msg ${role}`;
+      msg.innerHTML = `
+        <div class="dlg-avatar ${role === 'ai' ? 'ai-avatar' : 'user-avatar'}">${role === 'ai' ? 'AI' : '专'}</div>
+        <div class="dlg-bubble">${content}</div>`;
+      container.appendChild(msg);
+      if (scroll) container.scrollTop = container.scrollHeight;
+    }
+
+    function sendDlgMsg() {
+      const input = document.getElementById('dlgInput');
+      if (!input) return;
+      const text = input.value.trim();
+      if (!text) return;
+      addDlgMsg('user', text);
+      input.value = '';
+
+      // AI responds by parsing intent
+      const task = revisionTasks[currentRevTaskIdx];
+      if (!task) return;
+
+      const lower = text.toLowerCase();
+      if (lower.includes('确认') || lower.includes('同意') || lower.includes('可以') || lower.includes('没问题')) {
+        handleDlgAccept(task);
+      } else if (lower.includes('拒绝') || lower.includes('不同意') || lower.includes('不需要') || lower.includes('删除')) {
+        handleDlgReject(task);
+      } else if (lower.includes('修改') || lower.includes('调整') || lower.includes('改成') || lower.includes('换成') || lower.includes('应该是')) {
+        handleDlgModify(task, text);
+      } else {
+        // General response - ask for clarification
+        addDlgMsg('ai', `收到您的意见："${text}"。请问您对这条修订建议的最终决定是？<div class="dlg-inline-actions"><button class="dlg-inline-btn dlg-confirm-btn" onclick="dlgConfirm()">确认接受</button><button class="dlg-inline-btn dlg-adjust-btn" onclick="dlgAdjust()">需要调整</button><button class="dlg-inline-btn dlg-reject-btn" onclick="dlgReject()">拒绝</button></div>`);
+      }
+    }
+
+    function dlgConfirm() {
+      const task = revisionTasks[currentRevTaskIdx];
+      addDlgMsg('user', '确认');
+      handleDlgAccept(task);
+    }
+
+    function dlgAdjust() {
+      const task = revisionTasks[currentRevTaskIdx];
+      addDlgMsg('user', '需要调整');
+      addDlgMsg('ai', `好的，请告诉我您希望如何调整这条修订建议？您可以直接输入修改后的内容。`);
+    }
+
+    function dlgReject() {
+      const task = revisionTasks[currentRevTaskIdx];
+      addDlgMsg('user', '不同意');
+      handleDlgReject(task);
+    }
+
+    function handleDlgAccept(task) {
+      task.status = 'accepted';
+      updateRevisionBadge();
+      renderTaskList();
+      const actionLabel = task.suggestion.action === 'delete' ? '删除' : task.suggestion.action === 'add' ? '新增' : '修改';
+      addDlgMsg('ai', `✅ 已记录。${actionLabel}操作已确认：${task.suggestion.suggested ? task.suggestion.suggested.replace(/\n/g, '<br>') : task.suggestion.target}`);
+      advanceDialogueToNext();
+    }
+
+    function handleDlgReject(task) {
+      task.status = 'rejected';
+      updateRevisionBadge();
+      renderTaskList();
+      addDlgMsg('ai', `✅ 已记录。该修订建议已拒绝。`);
+      advanceDialogueToNext();
+    }
+
+    function handleDlgModify(task, text) {
+      // Extract modification from user's text
+      const match = text.match(/(?:改成|换成|应该是|修改为|改为)[:：]?\s*(.+)/);
+      const newContent = match ? match[1] : text;
+      task.suggestion.suggested = newContent;
+      task.status = 'modified';
+      updateRevisionBadge();
+      renderTaskList();
+      addDlgMsg('ai', `明白，我将修订建议调整为：<br><div class="dlg-suggestion-block"><strong>修改后内容：</strong>${newContent}</div>已记录此调整。`);
+      advanceDialogueToNext();
+    }
+
+    function advanceDialogueToNext() {
+      const next = revisionTasks.findIndex(t => t.status === 'pending');
+      if (next < 0) {
+        addDlgMsg('ai', `<br>🎉 所有修订任务已审核完毕！<div class="dlg-inline-actions"><button class="dlg-inline-btn dlg-confirm-btn" onclick="renderRevisionComplete()">查看汇总</button></div>`);
+        return;
+      }
+      currentRevTaskIdx = next;
+      setTimeout(() => startDialogueForTask(currentRevTaskIdx), 800);
+    }
+
+    function dlgShortcut(action) {
+      if (action === '回退上条') {
+        // Undo last task decision
+        for (let i = revisionTasks.length - 1; i >= 0; i--) {
+          if (revisionTasks[i].status !== 'pending') {
+            revisionTasks[i].status = 'pending';
+            currentRevTaskIdx = i;
+            updateRevisionBadge();
+            showToast('已回退上一条修订', 'info');
+            if (revisionMode === 'dialogue') {
+              addDlgMsg('user', '回退上条');
+              addDlgMsg('ai', '好的，已回退。让我们重新看这条——');
+              startDialogueForTask(i);
+            } else {
+              renderQuickReview();
+            }
+            return;
+          }
+        }
+        showToast('没有可回退的修订', 'warning');
+      } else if (action === '跳过此条') {
+        advanceDialogueToNext();
+      } else if (action === '查看原教材') {
+        showToast('查看原教材功能（待接入后端）', 'info');
+      } else if (action === '查看完整报告') {
+        showToast('查看完整报告功能（待接入后端）', 'info');
+      }
+    }
+
+    // Init revision badge
+    updateRevisionBadge();
   </script>
 </body>
 </html>
