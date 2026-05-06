@@ -1,2297 +1,989 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>故障教材专家标注平台</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.cn/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" />
-  <style>
-    :root {
-      --bg-primary: #f5f7fa;
-      --bg-secondary: #ffffff;
-      --bg-card: #ffffff;
-      --bg-card-hover: #f8f9fb;
-      --bg-input: #f0f2f5;
-      --bg-tag: #eef1f6;
-      --border-primary: #e2e6ed;
-      --border-active: #4f6ef7;
-      --border-success: #22c55e;
-      --border-warning: #f59e0b;
-      --border-danger: #ef4444;
-      --text-primary: #1a1d26;
-      --text-secondary: #5a6070;
-      --text-muted: #9ca3b0;
-      --accent-blue: #4f6ef7;
-      --accent-blue-hover: #3b5de7;
-      --accent-green: #22c55e;
-      --accent-green-dim: rgba(34, 197, 94, 0.08);
-      --accent-orange: #f59e0b;
-      --accent-orange-dim: rgba(245, 158, 11, 0.08);
-      --accent-red: #ef4444;
-      --accent-red-dim: rgba(239, 68, 68, 0.08);
-      --accent-purple: #8b5cf6;
-      --accent-purple-dim: rgba(139, 92, 246, 0.08);
-      --accent-cyan: #06b6d4;
-      --accent-cyan-dim: rgba(6, 182, 212, 0.08);
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-float: 0 10px 40px rgba(0,0,0,0.1);
-      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
-      --transition: 0.2s ease;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      line-height: 1.6;
-    }
-
-    .app-container {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    /* Header */
-    .app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 28px;
-      height: 60px;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border-primary);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .header-logo {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #4f6ef7, #8b5cf6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 14px;
-      color: #fff;
-    }
-
-    .header-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
-    .header-subtitle { font-size: 12px; color: var(--text-muted); margin-left: 4px; }
-
-    .header-right { display: flex; align-items: center; gap: 12px; }
-
-    .header-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .badge-ai { background: var(--accent-purple-dim); color: var(--accent-purple); border: 1px solid rgba(139,92,246,0.15); }
-    .badge-expert { background: var(--accent-orange-dim); color: var(--accent-orange); border: 1px solid rgba(245,158,11,0.15); }
-
-    .user-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--accent-blue);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 600; color: #fff; cursor: pointer;
-    }
-
-    /* Main */
-    .main-content {
-      flex: 1; padding: 28px;
-      max-width: 1400px; margin: 0 auto; width: 100%;
-    }
-
-    /* Step Progress */
-    .step-progress {
-      display: flex; align-items: center; gap: 0;
-      margin-bottom: 28px;
-      background: var(--bg-secondary);
-      border-radius: var(--radius-lg);
-      padding: 14px 20px;
-      border: 1px solid var(--border-primary);
-      box-shadow: var(--shadow-card);
-    }
-
-    .step-item {
-      display: flex; align-items: center; gap: 8px;
-      cursor: pointer; flex: 1;
-    }
-
-    .step-num {
-      width: 28px; height: 28px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 600; transition: var(--transition); flex-shrink: 0;
-    }
-
-    .step-item.active .step-num {
-      background: var(--accent-blue); color: #fff;
-      box-shadow: 0 0 0 3px rgba(79,110,247,0.15);
-    }
-    .step-item.completed .step-num { background: var(--accent-green); color: #fff; }
-    .step-item.pending .step-num { background: var(--bg-tag); color: var(--text-muted); }
-
-    .step-label { font-size: 13px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
-    .step-item.active .step-label { color: var(--text-primary); font-weight: 600; }
-    .step-item.completed .step-label { color: var(--accent-green); }
-
-    .step-connector { flex: 0 0 32px; height: 2px; background: var(--border-primary); margin: 0 6px; }
-    .step-connector.done { background: var(--accent-green); }
-
-    /* Panels */
-    .panel { display: none; }
-    .panel.visible { display: block; animation: fadeIn 0.3s ease; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Card base */
-    .card-section {
-      background: var(--bg-card);
-      border: 1px solid var(--border-primary);
-      border-radius: var(--radius-lg);
-      padding: 28px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow-card);
-    }
-
-    .section-title {
-      font-size: 18px; font-weight: 600; margin-bottom: 6px;
-      display: flex; align-items: center; gap: 10px;
-    }
-
-    .section-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
-
-    /* Search Box */
-    .search-box { position: relative; margin-bottom: 16px; }
-
-    .search-box input {
-      width: 100%; padding: 12px 16px 12px 42px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-primary);
-      background: var(--bg-input); color: var(--text-primary);
-      font-size: 14px; outline: none; transition: var(--transition);
-    }
-
-    .search-box input:focus {
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 0 3px rgba(79,110,247,0.1);
-    }
-
-    .search-box input::placeholder { color: var(--text-muted); }
-
-    .search-icon {
-      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-      color: var(--text-muted);
-    }
-
-    /* Tags */
-    .tags-row { display: flex; flex-wrap: wrap; gap: 10px; }
-
-    .tag-item {
-      padding: 8px 16px; border-radius: 20px;
-      font-size: 13px; font-weight: 500; cursor: pointer;
-      transition: var(--transition);
-      border: 1px solid var(--border-primary);
-      background: var(--bg-tag); color: var(--text-secondary);
-      display: flex; align-items: center; gap: 6px;
-    }
-
-    .tag-item:hover {
-      border-color: var(--accent-blue); color: var(--text-primary);
-      background: rgba(79,110,247,0.06);
-    }
-
-    .tag-item.selected {
-      border-color: var(--accent-blue);
-      background: rgba(79,110,247,0.1); color: var(--accent-blue);
-    }
-
-    .tag-item .dot { width: 6px; height: 6px; border-radius: 50%; }
-    .dot-exists { background: var(--accent-green); }
-    .dot-new { background: var(--accent-orange); }
-
-    /* Product Category Cards */
-    .category-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 14px;
-    }
-
-    .category-card {
-      border: 2px solid var(--border-primary);
-      border-radius: var(--radius-lg);
-      padding: 24px 16px;
-      text-align: center;
-      cursor: pointer;
-      transition: var(--transition);
-      background: var(--bg-card);
-    }
-
-    .category-card:hover {
-      border-color: var(--accent-blue);
-      background: rgba(79,110,247,0.03);
-      box-shadow: var(--shadow-card-hover);
-      transform: translateY(-2px);
-    }
-
-    .category-card.selected {
-      border-color: var(--accent-blue);
-      background: rgba(79,110,247,0.06);
-      box-shadow: 0 0 0 3px rgba(79,110,247,0.1);
-    }
-
-    .category-icon {
-      width: 56px; height: 56px; border-radius: 14px;
-      margin: 0 auto 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px;
-    }
-
-    .category-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-    .category-count { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-
-    /* Material Status Card */
-    .material-status { border-radius: var(--radius-md); padding: 20px; margin-top: 20px; display: none; }
-    .material-status.show { display: block; }
-
-    .material-status.exists-status {
-      background: var(--accent-green-dim); border: 1px solid rgba(34,197,94,0.15);
-    }
-    .material-status.new-status {
-      background: var(--accent-orange-dim); border: 1px solid rgba(245,158,11,0.15);
-    }
-
-    .status-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-
-    .status-icon {
-      width: 36px; height: 36px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; font-size: 18px;
-    }
-
-    .exists-status .status-icon { background: rgba(34,197,94,0.12); color: var(--accent-green); }
-    .new-status .status-icon { background: rgba(245,158,11,0.12); color: var(--accent-orange); }
-
-    .status-title { font-size: 15px; font-weight: 600; }
-    .exists-status .status-title { color: #16a34a; }
-    .new-status .status-title { color: #d97706; }
-
-    .status-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
-    .status-meta { display: flex; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
-
-    .meta-item {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--text-muted);
-    }
-    .meta-item strong { color: var(--text-secondary); font-weight: 600; }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 22px; border-radius: var(--radius-md);
-      font-size: 14px; font-weight: 500; cursor: pointer;
-      border: none; transition: var(--transition);
-    }
-
-    .btn-primary { background: var(--accent-blue); color: #fff; }
-    .btn-primary:hover { background: var(--accent-blue-hover); box-shadow: 0 4px 16px rgba(79,110,247,0.25); }
-    .btn-primary:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; box-shadow: none; }
-
-    .btn-secondary {
-      background: var(--bg-secondary); color: var(--text-secondary);
-      border: 1px solid var(--border-primary);
-    }
-    .btn-secondary:hover { border-color: #c0c5cf; color: var(--text-primary); }
-
-    .btn-danger { background: var(--accent-red-dim); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.15); }
-    .btn-danger:hover { background: rgba(239,68,68,0.12); }
-
-    .btn-success { background: var(--accent-green-dim); color: var(--accent-green); border: 1px solid rgba(34,197,94,0.15); }
-    .btn-success:hover { background: rgba(34,197,94,0.12); }
-
-    .btn-sm { padding: 6px 14px; font-size: 12px; }
-    .btn-lg { padding: 14px 32px; font-size: 15px; }
-
-    .action-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-primary);
-    }
-
-    /* AI Generating */
-    .ai-generating { text-align: center; padding: 60px 20px; }
-
-    .ai-spinner {
-      width: 56px; height: 56px;
-      border: 3px solid var(--border-primary);
-      border-top-color: var(--accent-blue);
-      border-radius: 50%;
-      margin: 0 auto 20px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .ai-gen-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .ai-gen-desc { font-size: 13px; color: var(--text-secondary); }
-
-    .gen-progress { margin-top: 24px; max-width: 400px; margin-left: auto; margin-right: auto; }
-
-    .progress-bar { height: 4px; background: var(--border-primary); border-radius: 2px; overflow: hidden; }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
-      border-radius: 2px; transition: width 0.5s ease;
-    }
-
-    .progress-text { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
-
-    .gen-result { display: none; }
-    .gen-result.show { display: block; }
-
-    .gen-summary {
-      background: var(--bg-card); border: 1px solid var(--border-primary);
-      border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px;
-      box-shadow: var(--shadow-card);
-    }
-
-    .gen-summary-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
-    }
-
-    .gen-stats { display: flex; gap: 24px; }
-    .gen-stat { text-align: center; }
-    .gen-stat-num { font-size: 24px; font-weight: 700; color: var(--accent-blue); }
-    .gen-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-    .gen-content-preview {
-      background: var(--bg-input); border-radius: var(--radius-md);
-      padding: 16px; font-size: 13px; line-height: 1.8;
-      color: var(--text-secondary); max-height: 200px; overflow-y: auto;
-      border: 1px solid var(--border-primary);
-    }
-
-    /* Layer Tabs */
-    .layer-tabs {
-      display: flex; gap: 0;
-      background: var(--bg-input); border-radius: var(--radius-lg);
-      padding: 4px; margin-bottom: 24px;
-      border: 1px solid var(--border-primary);
-    }
-
-    .layer-tab {
-      flex: 1; padding: 12px 16px; text-align: center;
-      border-radius: var(--radius-md); cursor: pointer;
-      transition: var(--transition); font-size: 13px; font-weight: 500;
-      color: var(--text-muted); position: relative;
-    }
-
-    .layer-tab:hover { color: var(--text-secondary); background: var(--bg-secondary); }
-
-    .layer-tab.active {
-      background: var(--accent-blue); color: #fff;
-      box-shadow: 0 2px 8px rgba(79,110,247,0.25);
-    }
-
-    .layer-tab .tab-badge {
-      position: absolute; top: 6px; right: 16px;
-      width: 18px; height: 18px; border-radius: 50%;
-      font-size: 10px; display: flex; align-items: center; justify-content: center;
-      font-weight: 600;
-    }
-
-    .layer-tab.active .tab-badge { background: rgba(255,255,255,0.2); color: #fff; }
-    .layer-tab:not(.active) .tab-badge { background: var(--bg-tag); color: var(--text-muted); }
-
-    .layer-tab.completed-tab { background: var(--accent-green-dim); color: var(--accent-green); }
-    .layer-tab.completed-tab .tab-badge { background: rgba(34,197,94,0.12); color: var(--accent-green); }
-
-    .layer-content { display: none; }
-    .layer-content.visible { display: block; animation: fadeIn 0.25s ease; }
-
-    .layer-header {
-      display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px;
-    }
-
-    .layer-title-area h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-    .layer-title-area p { font-size: 13px; color: var(--text-secondary); }
-    .layer-actions { display: flex; gap: 8px; flex-shrink: 0; }
-
-    /* Cause Card */
-    .root-cause-list { display: flex; flex-direction: column; gap: 10px; }
-
-    .cause-card {
-      background: var(--bg-card); border: 1px solid var(--border-primary);
-      border-radius: var(--radius-md); padding: 16px 18px;
-      transition: var(--transition); cursor: default;
-      box-shadow: var(--shadow-card);
-    }
-
-    .cause-card:hover { border-color: var(--border-active); background: var(--bg-card-hover); }
-    .cause-card.deleted { opacity: 0.45; text-decoration: line-through; border-color: var(--border-danger); }
-    .cause-card.modified { border-color: var(--border-warning); }
-
-    .cause-top { display: flex; align-items: flex-start; gap: 12px; }
-
-    .cause-checkbox { margin-top: 2px; flex-shrink: 0; }
-    .cause-checkbox input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-blue); cursor: pointer; }
-
-    .cause-body { flex: 1; min-width: 0; }
-
-    .cause-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
-    .cause-title-text { flex: 1; }
-    .cause-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
-
-    .cause-badge {
-      display: inline-flex; padding: 2px 8px; border-radius: 10px;
-      font-size: 11px; font-weight: 500;
-    }
-
-    .badge-keep { background: var(--accent-green-dim); color: var(--accent-green); }
-    .badge-delete { background: var(--accent-red-dim); color: var(--accent-red); }
-    .badge-modify { background: var(--accent-orange-dim); color: var(--accent-orange); }
-    .badge-new { background: var(--accent-cyan-dim); color: var(--accent-cyan); }
-
-    .cause-actions { display: flex; gap: 6px; flex-shrink: 0; }
-
-    .cause-action-btn {
-      width: 30px; height: 30px; border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; border: 1px solid var(--border-primary);
-      background: var(--bg-secondary); color: var(--text-muted);
-      font-size: 13px; transition: var(--transition);
-    }
-
-    .cause-action-btn:hover { border-color: #bbb; color: var(--text-primary); }
-    .cause-action-btn.btn-keep:hover { border-color: var(--accent-green); color: var(--accent-green); background: var(--accent-green-dim); }
-    .cause-action-btn.btn-delete:hover { border-color: var(--accent-red); color: var(--accent-red); background: var(--accent-red-dim); }
-    .cause-action-btn.btn-edit:hover { border-color: var(--accent-orange); color: var(--accent-orange); background: var(--accent-orange-dim); }
-    .cause-action-btn.active-action { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(79,110,247,0.08); }
-
-    .add-cause-area { margin-top: 12px; }
-    .add-cause-input { display: flex; gap: 10px; }
-
-    .add-cause-input input {
-      flex: 1; padding: 10px 14px;
-      border-radius: var(--radius-md);
-      border: 1px dashed var(--border-primary);
-      background: var(--bg-input); color: var(--text-primary);
-      font-size: 13px; outline: none; transition: var(--transition);
-    }
-
-    .add-cause-input input:focus { border-color: var(--accent-cyan); border-style: solid; }
-    .add-cause-input input::placeholder { color: var(--text-muted); }
-
-    /* Segment Card (Layer 2 & 3) */
-    .segment-list { display: flex; flex-direction: column; gap: 16px; }
-
-    .segment-card {
-      background: var(--bg-card); border: 1px solid var(--border-primary);
-      border-radius: var(--radius-md); overflow: hidden;
-      transition: var(--transition); box-shadow: var(--shadow-card);
-    }
-
-    .segment-card:hover { border-color: var(--border-active); }
-
-    .segment-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 18px; border-bottom: 1px solid var(--border-primary);
-      background: var(--bg-input);
-    }
-
-    .segment-label {
-      font-size: 13px; font-weight: 600;
-      display: flex; align-items: center; gap: 8px;
-    }
-
-    .segment-num {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: var(--accent-blue); color: #fff;
-      display: flex; align-items: center; justify-content: center; font-size: 11px;
-    }
-
-    .segment-body { padding: 16px 18px; }
-
-    .segment-text {
-      font-size: 13px; line-height: 1.8; color: var(--text-secondary);
-      margin-bottom: 12px; padding: 12px;
-      background: var(--bg-input); border-radius: var(--radius-sm);
-      border-left: 3px solid var(--border-primary);
-    }
-
-    .segment-text.highlight { border-left-color: var(--accent-orange); background: var(--accent-orange-dim); }
-
-    .annotation-area { display: none; margin-top: 12px; }
-    .annotation-area.show { display: block; animation: fadeIn 0.2s ease; }
-
-    .annotation-label {
-      font-size: 12px; font-weight: 500; color: var(--accent-orange);
-      margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
-    }
-
-    .annotation-textarea {
-      width: 100%; min-height: 80px; padding: 12px;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(245,158,11,0.25);
-      background: var(--bg-secondary); color: var(--text-primary);
-      font-size: 13px; line-height: 1.7; resize: vertical; outline: none; font-family: inherit;
-    }
-
-    .annotation-textarea:focus {
-      border-color: var(--accent-orange);
-      box-shadow: 0 0 0 3px rgba(245,158,11,0.08);
-    }
-
-    .segment-actions { display: flex; gap: 8px; margin-top: 10px; }
-
-    .seg-action-btn {
-      padding: 6px 14px; border-radius: var(--radius-sm);
-      font-size: 12px; font-weight: 500; cursor: pointer;
-      border: 1px solid var(--border-primary);
-      background: var(--bg-secondary); color: var(--text-secondary);
-      transition: var(--transition); display: flex; align-items: center; gap: 5px;
-    }
-
-    .seg-action-btn:hover { border-color: #bbb; color: var(--text-primary); }
-    .seg-action-btn.approve:hover, .seg-action-btn.approve.active-seg { border-color: var(--accent-green); color: var(--accent-green); background: var(--accent-green-dim); }
-    .seg-action-btn.modify:hover, .seg-action-btn.modify.active-seg { border-color: var(--accent-orange); color: var(--accent-orange); background: var(--accent-orange-dim); }
-    .seg-action-btn.reject:hover, .seg-action-btn.reject.active-seg { border-color: var(--accent-red); color: var(--accent-red); background: var(--accent-red-dim); }
-
-    /* Stats */
-    .annotation-stats { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
-
-    .stat-card {
-      background: var(--bg-card); border: 1px solid var(--border-primary);
-      border-radius: var(--radius-md); padding: 14px 18px;
-      display: flex; align-items: center; gap: 12px; min-width: 160px;
-      box-shadow: var(--shadow-card);
-    }
-
-    .stat-icon {
-      width: 36px; height: 36px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center; font-size: 16px;
-    }
-
-    .stat-icon.green { background: var(--accent-green-dim); color: var(--accent-green); }
-    .stat-icon.red { background: var(--accent-red-dim); color: var(--accent-red); }
-    .stat-icon.orange { background: var(--accent-orange-dim); color: var(--accent-orange); }
-    .stat-icon.cyan { background: var(--accent-cyan-dim); color: var(--accent-cyan); }
-    .stat-icon.muted { background: var(--bg-tag); color: var(--text-muted); }
-
-    .stat-info .stat-value { font-size: 18px; font-weight: 700; }
-    .stat-info .stat-label { font-size: 11px; color: var(--text-muted); }
-
-    /* Complete */
-    .complete-panel { text-align: center; padding: 60px 20px; }
-
-    .complete-icon {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: var(--accent-green-dim); color: var(--accent-green);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 32px; margin: 0 auto 20px;
-    }
-
-    .complete-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-    .complete-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 32px; }
-
-    .complete-summary {
-      background: var(--bg-card); border: 1px solid var(--border-primary);
-      border-radius: var(--radius-lg); padding: 24px;
-      max-width: 500px; margin: 0 auto 32px; text-align: left;
-      box-shadow: var(--shadow-card);
-    }
-
-    .complete-summary h4 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--accent-green); }
-
-    .summary-row {
-      display: flex; justify-content: space-between; padding: 8px 0;
-      font-size: 13px; border-bottom: 1px solid var(--border-primary);
-    }
-    .summary-row:last-child { border-bottom: none; }
-    .summary-row .label { color: var(--text-secondary); }
-    .summary-row .value { font-weight: 600; }
-
-    /* Completed faults list */
-    .completed-faults {
-      background: var(--bg-card); border: 1px solid var(--border-primary);
-      border-radius: var(--radius-lg); padding: 20px; margin-top: 20px;
-      box-shadow: var(--shadow-card);
-    }
-
-    .completed-faults h4 {
-      font-size: 14px; font-weight: 600; margin-bottom: 12px;
-      display: flex; align-items: center; gap: 8px; color: var(--accent-green);
-    }
-
-    .completed-fault-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 14px; border-radius: var(--radius-sm);
-      background: var(--bg-input); margin-bottom: 6px; font-size: 13px;
-    }
-
-    .completed-fault-item .name { display: flex; align-items: center; gap: 8px; }
-    .check-icon { color: var(--accent-green); }
-
-    /* Toast */
-    .toast-container {
-      position: fixed; top: 80px; right: 28px; z-index: 999;
-      display: flex; flex-direction: column; gap: 8px;
-    }
-
-    .toast {
-      background: var(--bg-card); border: 1px solid var(--border-primary);
-      border-radius: var(--radius-md); padding: 12px 18px;
-      display: flex; align-items: center; gap: 10px;
-      box-shadow: var(--shadow-float); font-size: 13px;
-      animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
-      min-width: 260px;
-    }
-
-    .toast.success { border-left: 3px solid var(--accent-green); }
-    .toast.warning { border-left: 3px solid var(--accent-orange); }
-    .toast.error { border-left: 3px solid var(--accent-red); }
-    .toast.info { border-left: 3px solid var(--accent-blue); }
-
-    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.3);
-      z-index: 200; display: none; align-items: center; justify-content: center;
-    }
-    .modal-overlay.show { display: flex; }
-
-    .modal {
-      background: var(--bg-secondary); border: 1px solid var(--border-primary);
-      border-radius: var(--radius-lg); width: 90%; max-width: 560px;
-      box-shadow: var(--shadow-float); animation: fadeIn 0.2s ease;
-    }
-
-    .modal-header {
-      padding: 18px 24px; border-bottom: 1px solid var(--border-primary);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-
-    .modal-title { font-size: 16px; font-weight: 600; }
-
-    .modal-close {
-      width: 28px; height: 28px; border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: var(--text-muted); background: none;
-      border: none; font-size: 16px; transition: var(--transition);
-    }
-    .modal-close:hover { background: var(--bg-tag); color: var(--text-primary); }
-
-    .modal-body { padding: 20px 24px; }
-
-    .modal-body label {
-      font-size: 13px; font-weight: 500; color: var(--text-secondary);
-      margin-bottom: 6px; display: block;
-    }
-
-    .modal-body textarea {
-      width: 100%; min-height: 120px; padding: 12px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-primary);
-      background: var(--bg-input); color: var(--text-primary);
-      font-size: 13px; line-height: 1.7; resize: vertical; outline: none; font-family: inherit;
-    }
-    .modal-body textarea:focus { border-color: var(--accent-blue); }
-
-    .modal-footer {
-      padding: 14px 24px; border-top: 1px solid var(--border-primary);
-      display: flex; justify-content: flex-end; gap: 10px;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
-
-    @media (max-width: 768px) {
-      .main-content { padding: 16px; }
-      .step-label { display: none; }
-      .step-connector { flex: 0 0 16px; }
-      .gen-stats { flex-wrap: wrap; }
-      .annotation-stats { flex-direction: column; }
-      .layer-header { flex-direction: column; gap: 12px; }
-      .category-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    /* ===== Revision Panel & Dialogue Revision ===== */
-    .revision-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200;
-      display: none; align-items: center; justify-content: center;
-      animation: fadeIn .2s;
-    }
-    .revision-overlay.show { display: flex; }
-    .revision-panel {
-      background: var(--bg-secondary); border-radius: var(--radius-lg);
-      width: 92%; max-width: 960px; max-height: 85vh; display: flex; flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    }
-    .revision-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 24px; border-bottom: 1px solid var(--border-primary);
-    }
-    .revision-header h3 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-    .revision-close {
-      width: 32px; height: 32px; border-radius: 8px; border: none;
-      background: var(--bg-input); cursor: pointer; font-size: 16px;
-      display: flex; align-items: center; justify-content: center; transition: var(--transition);
-    }
-    .revision-close:hover { background: var(--accent-red-dim); color: var(--accent-red); }
-    .revision-body { flex: 1; overflow: hidden; display: flex; }
-
-    /* Revision Task List (left) */
-    .revision-task-list {
-      width: 240px; border-right: 1px solid var(--border-primary);
-      overflow-y: auto; padding: 12px;
-    }
-    .revision-task-item {
-      padding: 10px 12px; border-radius: 8px; cursor: pointer;
-      margin-bottom: 6px; transition: var(--transition);
-      border: 1px solid transparent;
-    }
-    .revision-task-item:hover { background: var(--bg-input); }
-    .revision-task-item.active { background: var(--accent-blue-dim, rgba(79,110,247,0.08)); border-color: var(--accent-blue); }
-    .revision-task-item.done { opacity: 0.5; }
-    .rti-type { font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; display: inline-block; margin-bottom: 4px; }
-    .rti-type.root { background: #FEF2F2; color: #EF4444; }
-    .rti-type.path { background: #FFFBEB; color: #F59E0B; }
-    .rti-type.assoc { background: #EFF6FF; color: #3B82F6; }
-    .rti-title { font-size: 12px; font-weight: 500; color: var(--text-primary); line-height: 1.4; }
-    .rti-status { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-    .revision-task-summary { padding: 12px; border-top: 1px solid var(--border-primary); font-size: 12px; color: var(--text-secondary); }
-
-    /* Revision Content (right) - quick review mode */
-    .revision-content {
-      flex: 1; overflow-y: auto; padding: 20px 24px;
-    }
-    .rev-section { margin-bottom: 20px; }
-    .rev-section-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    .rev-evidence {
-      background: var(--bg-input); border-radius: 8px; padding: 12px;
-      font-size: 12px; color: var(--text-secondary); line-height: 1.7;
-      border-left: 3px solid var(--accent-orange);
-    }
-    .rev-suggestion {
-      background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px;
-      padding: 12px; margin-top: 10px;
-    }
-    .rev-suggestion-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; font-size: 12px; }
-    .rev-suggestion-label { font-weight: 600; color: #1E40AF; white-space: nowrap; min-width: 48px; }
-    .rev-suggestion-value { color: #1E293B; }
-    .rev-suggestion-value.del { text-decoration: line-through; color: var(--accent-red); }
-    .rev-suggestion-value.add { color: var(--accent-green); }
-    .rev-actions { display: flex; gap: 8px; margin-top: 14px; }
-    .rev-btn { padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border-primary); transition: var(--transition); }
-    .rev-btn-accept { background: var(--accent-green); color: #fff; border-color: var(--accent-green); }
-    .rev-btn-accept:hover { background: #16a34a; }
-    .rev-btn-reject { background: var(--accent-red); color: #fff; border-color: var(--accent-red); }
-    .rev-btn-reject:hover { background: #dc2626; }
-    .rev-btn-modify { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
-    .rev-btn-modify:hover { background: #3b5de7; }
-
-    /* Dialogue Revision Mode */
-    .dialogue-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .dialogue-messages { flex: 1; overflow-y: auto; padding: 20px 24px; }
-    .dlg-msg { margin-bottom: 16px; display: flex; gap: 10px; }
-    .dlg-msg.ai { flex-direction: row; }
-    .dlg-msg.user { flex-direction: row-reverse; }
-    .dlg-avatar {
-      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 600;
-    }
-    .dlg-avatar.ai-avatar { background: linear-gradient(135deg, #4f6ef7, #8b5cf6); color: #fff; }
-    .dlg-avatar.user-avatar { background: var(--accent-blue); color: #fff; }
-    .dlg-bubble {
-      max-width: 75%; padding: 12px 16px; border-radius: 12px;
-      font-size: 13px; line-height: 1.7;
-    }
-    .dlg-msg.ai .dlg-bubble { background: var(--bg-input); color: var(--text-primary); border-bottom-left-radius: 4px; }
-    .dlg-msg.user .dlg-bubble { background: var(--accent-blue); color: #fff; border-bottom-right-radius: 4px; }
-    .dlg-evidence-block {
-      background: #FFF7ED; border: 1px solid #FDBA74; border-radius: 8px;
-      padding: 10px; margin: 8px 0; font-size: 12px; color: #92400E; line-height: 1.6;
-    }
-    .dlg-suggestion-block {
-      background: #EFF6FF; border: 1px solid #93C5FD; border-radius: 8px;
-      padding: 10px; margin: 8px 0; font-size: 12px; line-height: 1.6;
-    }
-    .dlg-inline-actions { display: flex; gap: 6px; margin-top: 10px; }
-    .dlg-inline-btn {
-      padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
-      cursor: pointer; border: none; transition: var(--transition);
-    }
-    .dlg-confirm-btn { background: var(--accent-green); color: #fff; }
-    .dlg-confirm-btn:hover { background: #16a34a; }
-    .dlg-adjust-btn { background: var(--accent-blue); color: #fff; }
-    .dlg-adjust-btn:hover { background: #3b5de7; }
-    .dlg-reject-btn { background: #F1F5F9; color: #64748B; border: 1px solid #E2E8F0; }
-    .dlg-reject-btn:hover { background: #E2E8F0; }
-
-    .dialogue-input-area {
-      border-top: 1px solid var(--border-primary); padding: 12px 24px;
-      display: flex; gap: 8px; align-items: center;
-    }
-    .dialogue-input {
-      flex: 1; border: 1px solid var(--border-primary); border-radius: 8px;
-      padding: 10px 14px; font-size: 13px; outline: none; font-family: inherit;
-      background: var(--bg-input); color: var(--text-primary);
-      transition: var(--transition);
-    }
-    .dialogue-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(79,110,247,0.1); }
-    .dialogue-send {
-      width: 40px; height: 40px; border-radius: 8px; border: none;
-      background: var(--accent-blue); color: #fff; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; transition: var(--transition);
-    }
-    .dialogue-send:hover { background: #3b5de7; }
-    .dialogue-shortcuts {
-      border-top: 1px solid var(--border-primary); padding: 8px 24px;
-      display: flex; gap: 8px;
-    }
-    .dlg-shortcut-btn {
-      padding: 4px 10px; border-radius: 6px; font-size: 11px;
-      background: var(--bg-input); border: 1px solid var(--border-primary);
-      color: var(--text-secondary); cursor: pointer; transition: var(--transition);
-    }
-    .dlg-shortcut-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
-
-    /* Mode selector in revision */
-    .mode-selector { display: flex; gap: 12px; margin: 16px 0; }
-    .mode-card {
-      flex: 1; padding: 20px; border: 2px solid var(--border-primary);
-      border-radius: 12px; cursor: pointer; transition: var(--transition);
-      text-align: center;
-    }
-    .mode-card:hover { border-color: var(--accent-blue); }
-    .mode-card.selected { border-color: var(--accent-blue); background: rgba(79,110,247,0.05); }
-    .mode-card-icon { font-size: 28px; margin-bottom: 8px; }
-    .mode-card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-    .mode-card-desc { font-size: 12px; color: var(--text-secondary); }
-
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>故障教材专家标注平台 v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#3B82F6;--primary-light:#DBEAFE;--primary-dark:#1D4ED8;
+  --success:#10B981;--success-light:#D1FAE5;
+  --warning:#F59E0B;--warning-light:#FEF3C7;
+  --danger:#EF4444;--danger-light:#FEE2E2;
+  --ai-bg:#EEF2FF;--reason-bg:#FEF3C7;--act-bg:#DBEAFE;
+  --hook-bg:#F0FDF4;--gym-bg:#FDF4FF;
+  --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;
+  --gray-300:#D1D5DB;--gray-400:#9CA3AF;--gray-500:#6B7280;
+  --gray-600:#4B5563;--gray-700:#374151;--gray-800:#1F2937;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--gray-50);color:var(--gray-800);line-height:1.6}
+.app{max-width:1400px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+.header{background:#fff;border-bottom:1px solid var(--gray-200);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo{font-size:18px;font-weight:700;color:var(--primary)}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{padding:6px 16px;border-radius:20px;font-size:13px;cursor:pointer;text-decoration:none;color:var(--gray-600);border:1px solid transparent;transition:all .2s}
+.nav-tab:hover{background:var(--gray-100)}
+.nav-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.header-right{display:flex;align-items:center;gap:12px}
+.revision-badge{position:relative;cursor:pointer;padding:6px 12px;border-radius:20px;background:var(--warning-light);color:#92400E;font-size:13px;font-weight:600;border:1px solid #FDE68A}
+.revision-badge .count{background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;margin-left:4px}
+.user-info{font-size:13px;color:var(--gray-500)}
+
+/* Stepper */
+.stepper{background:#fff;padding:16px 24px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:0;overflow-x:auto}
+.step-item{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;border:2px solid var(--gray-300);color:var(--gray-400);transition:all .3s}
+.step-item.active .step-num{background:var(--primary);color:#fff;border-color:var(--primary)}
+.step-item.done .step-num{background:var(--success);color:#fff;border-color:var(--success)}
+.step-label{font-size:13px;color:var(--gray-500)}
+.step-item.active .step-label{color:var(--gray-800);font-weight:600}
+.step-item.done .step-label{color:var(--success)}
+.step-sep{width:32px;height:2px;background:var(--gray-200);margin:0 4px;flex-shrink:0}
+
+/* Main */
+.main{flex:1;padding:24px;overflow-y:auto}
+
+/* Panels */
+.panel{display:none}
+.panel.active{display:block}
+
+/* Cards */
+.card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:20px;margin-bottom:16px}
+.card-title{font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+/* Product Cards */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+.product-card{background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;text-align:center;cursor:pointer;transition:all .2s}
+.product-card:hover{border-color:var(--primary);box-shadow:0 4px 12px rgba(59,130,246,.15)}
+.product-card.selected{border-color:var(--primary);background:var(--primary-light)}
+.product-icon{font-size:32px;margin-bottom:8px}
+.product-name{font-size:14px;font-weight:600}
+.product-count{font-size:12px;color:var(--gray-500)}
+
+/* Fault Tags */
+.fault-section{margin-top:20px}
+.search-box{width:100%;padding:10px 16px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:14px;outline:none;transition:border .2s}
+.search-box:focus{border-color:var(--primary)}
+.fault-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fault-tag{padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid var(--gray-300);transition:all .2s;display:flex;align-items:center;gap:6px}
+.fault-tag:hover{border-color:var(--primary)}
+.fault-tag.existing{border-color:var(--success);background:var(--success-light);color:#065F46}
+.fault-tag.new-fault{border-color:var(--warning);background:var(--warning-light);color:#92400E}
+.fault-tag .badge{font-size:11px;padding:1px 6px;border-radius:8px;font-weight:600}
+.fault-tag.existing .badge{background:var(--success);color:#fff}
+.fault-tag.new-fault .badge{background:var(--warning);color:#fff}
+
+/* MCP Knowledge Card */
+.mcp-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:12px 16px;margin:12px 0;font-size:13px}
+.mcp-card .mcp-source{font-size:11px;color:var(--gray-500);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.mcp-card .mcp-content{color:var(--gray-700)}
+
+/* AI Generation */
+.gen-progress{margin:20px 0}
+.gen-bar{height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden}
+.gen-fill{height:100%;background:linear-gradient(90deg,var(--primary),#8B5CF6);border-radius:4px;transition:width .3s;width:0}
+.gen-stage{font-size:13px;color:var(--gray-500);margin-top:8px}
+.gen-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.gen-stat{background:var(--gray-50);border-radius:var(--radius);padding:12px;text-align:center}
+.gen-stat .num{font-size:24px;font-weight:700;color:var(--primary)}
+.gen-stat .label{font-size:12px;color:var(--gray-500)}
+
+/* ReAct Chat */
+.react-layout{display:grid;grid-template-columns:1fr 320px;gap:16px;height:calc(100vh - 220px)}
+.chat-area{display:flex;flex-direction:column;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--gray-200);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.chat-messages{flex:1;overflow-y:auto;padding:16px}
+.chat-msg{margin-bottom:16px}
+.chat-msg.ai{margin-right:40px}
+.chat-msg.expert{margin-left:40px;text-align:right}
+.msg-bubble{display:inline-block;padding:12px 16px;border-radius:var(--radius-lg);font-size:14px;text-align:left;max-width:100%}
+.ai .msg-bubble{background:var(--ai-bg);border:1px solid #C7D2FE}
+.expert .msg-bubble{background:var(--primary-light);border:1px solid #93C5FD}
+.msg-meta{font-size:11px;color:var(--gray-400);margin-top:4px}
+
+/* ReAct Tags */
+.react-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-bottom:6px}
+.react-tag.reasoning{background:var(--reason-bg);color:#92400E}
+.react-tag.acting{background:var(--act-bg);color:#1E40AF}
+.react-tag.hook{background:var(--hook-bg);color:#065F46}
+.react-tag.gym{background:var(--gym-bg);color:#6B21A8}
+.react-tag.mcp{background:#FEF3C7;color:#92400E}
+
+/* Hook Alert */
+.hook-alert{padding:10px 14px;border-radius:var(--radius);margin:8px 0;font-size:13px;display:flex;align-items:flex-start;gap:8px}
+.hook-alert.pass{background:var(--hook-bg);border:1px solid #86EFAC;color:#065F46}
+.hook-alert.warn{background:var(--warning-light);border:1px solid #FDE68A;color:#92400E}
+.hook-alert.block{background:var(--danger-light);border:1px solid #FCA5A5;color:#991B1B}
+.hook-alert .hook-icon{font-size:16px;flex-shrink:0}
+
+/* Gym Result */
+.gym-result{background:var(--gym-bg);border:1px solid #D8B4FE;border-radius:var(--radius);padding:12px;margin:8px 0;font-size:13px}
+.gym-score{font-size:20px;font-weight:700;color:#7C3AED}
+.gym-items{margin-top:8px}
+.gym-item{display:flex;align-items:center;gap:6px;margin:4px 0;font-size:12px}
+
+/* MCP Inline Card */
+.mcp-inline{background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--radius);padding:10px 14px;margin:8px 0;font-size:13px}
+.mcp-inline .mcp-label{font-size:11px;font-weight:600;color:#92400E;margin-bottom:4px}
+
+/* Chat Input */
+.chat-input-area{padding:12px 16px;border-top:1px solid var(--gray-200)}
+.tool-bar{display:flex;gap:6px;margin-bottom:8px}
+.tool-btn{padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--gray-300);background:#fff;color:var(--gray-600);transition:all .2s}
+.tool-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.input-row{display:flex;gap:8px}
+.chat-input{flex:1;padding:10px 14px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:14px;outline:none;resize:none}
+.chat-input:focus{border-color:var(--primary)}
+.send-btn{padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:14px;cursor:pointer;font-weight:600}
+.send-btn:hover{background:var(--primary-dark)}
+.quick-actions{display:flex;gap:6px;margin-top:8px}
+.quick-btn{padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--gray-200);background:var(--gray-50);color:var(--gray-600)}
+
+/* Side Panel - AgentGym + Hooks */
+.side-panel{display:flex;flex-direction:column;gap:12px}
+.side-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden}
+.side-card-header{padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:6px}
+.side-card-body{padding:12px 14px;font-size:13px}
+.gym-status{display:flex;align-items:center;gap:8px;padding:8px 0}
+.gym-dot{width:10px;height:10px;border-radius:50%}
+.gym-dot.idle{background:var(--gray-300)}
+.gym-dot.running{background:var(--warning);animation:pulse 1.5s infinite}
+.gym-dot.pass{background:var(--success)}
+.gym-dot.fail{background:var(--danger)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hook-list{list-style:none}
+.hook-item{display:flex;align-items:center;gap:6px;padding:6px 0;font-size:12px;border-bottom:1px solid var(--gray-100)}
+.hook-item:last-child{border-bottom:none}
+.hook-status{font-size:14px}
+.version-info{font-size:12px;color:var(--gray-500);padding:8px 0}
+
+/* Annotation Content */
+.annotation-modules{margin-top:16px}
+.module-tab{display:flex;gap:4px;margin-bottom:16px}
+.module-tab-btn{padding:8px 16px;border-radius:var(--radius);font-size:13px;cursor:pointer;border:1px solid var(--gray-300);background:#fff;transition:all .2s}
+.module-tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.root-cause-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:8px;background:#fff;transition:all .2s}
+.root-cause-item:hover{border-color:var(--primary-light)}
+.rc-actions{display:flex;gap:4px;margin-left:auto;flex-shrink:0}
+.rc-btn{padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--gray-300);background:#fff;transition:all .2s;font-weight:600}
+.rc-btn.keep{color:var(--success);border-color:#86EFAC}
+.rc-btn.keep.active{background:var(--success);color:#fff}
+.rc-btn.delete{color:var(--danger);border-color:#FCA5A5}
+.rc-btn.delete.active{background:var(--danger);color:#fff}
+.rc-btn.edit{color:var(--primary);border-color:#93C5FD}
+.rc-btn.edit.active{background:var(--primary);color:#fff}
+.rc-num{font-size:12px;font-weight:700;color:var(--gray-400);min-width:20px}
+.rc-text{font-size:14px;flex:1}
+.rc-badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.rc-badge.kept{background:var(--success-light);color:#065F46}
+.rc-badge.deleted{background:var(--danger-light);color:#991B1B}
+.rc-badge.modified{background:var(--primary-light);color:#1E40AF}
+.rc-badge.new{background:var(--warning-light);color:#92400E}
+
+/* Add Root Cause */
+.add-rc{display:flex;gap:8px;margin-top:12px;padding:12px;background:var(--gray-50);border-radius:var(--radius);border:1px dashed var(--gray-300)}
+.add-rc input{flex:1;padding:8px 12px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;outline:none}
+.add-rc input:focus{border-color:var(--primary)}
+
+/* Segment Annotation */
+.segment{padding:14px;border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:10px;background:#fff}
+.segment-text{font-size:14px;color:var(--gray-700);margin-bottom:10px}
+.segment-actions{display:flex;gap:6px}
+.seg-btn{padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--gray-300);background:#fff;font-weight:600;transition:all .2s}
+.seg-btn.approve{color:var(--success)}
+.seg-btn.approve.active{background:var(--success);color:#fff}
+.seg-btn.modify{color:var(--primary)}
+.seg-btn.modify.active{background:var(--primary);color:#fff}
+.seg-btn.reject{color:var(--danger)}
+.seg-btn.reject.active{background:var(--danger);color:#fff}
+.modify-box{margin-top:8px;display:none}
+.modify-box.show{display:block}
+.modify-box textarea{width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;resize:vertical;min-height:60px;outline:none}
+.modify-box textarea:focus{border-color:var(--primary)}
+
+/* Publish */
+.publish-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.summary-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px}
+.summary-card h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--gray-700)}
+.stat-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--gray-100)}
+.stat-row:last-child{border-bottom:none}
+.stat-val{font-weight:600}
+.stat-val.green{color:var(--success)}
+.stat-val.red{color:var(--danger)}
+.stat-val.blue{color:var(--primary)}
+.stat-val.amber{color:var(--warning)}
+.btn-group{display:flex;gap:12px;margin-top:24px}
+.btn{padding:10px 24px;border-radius:var(--radius);font-size:14px;cursor:pointer;border:1px solid var(--gray-300);background:#fff;font-weight:600;transition:all .2s}
+.btn:hover{background:var(--gray-50)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-success{background:var(--success);color:#fff;border-color:var(--success)}
+
+/* Revision Panel (overlay) */
+.revision-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:none}
+.revision-overlay.show{display:block}
+.revision-panel{position:fixed;right:0;top:0;bottom:0;width:560px;background:#fff;z-index:201;transform:translateX(100%);transition:transform .3s;display:flex;flex-direction:column}
+.revision-panel.show{transform:translateX(0)}
+.rev-header{padding:16px 20px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between}
+.rev-header h2{font-size:16px;font-weight:700}
+.rev-close{cursor:pointer;font-size:20px;color:var(--gray-400);background:none;border:none}
+.rev-body{flex:1;overflow-y:auto;padding:16px 20px}
+.rev-task{padding:12px;border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:10px;cursor:pointer;transition:all .2s}
+.rev-task:hover{border-color:var(--primary)}
+.rev-task.high{border-left:3px solid var(--danger)}
+.rev-task.medium{border-left:3px solid var(--warning)}
+.rev-task.low{border-left:3px solid var(--gray-400)}
+.rev-type{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:4px}
+.rev-type.root_cause{background:var(--danger-light);color:#991B1B}
+.rev-type.path{background:var(--primary-light);color:#1E40AF}
+.rev-type.association{background:var(--warning-light);color:#92400E}
+.rev-source{font-size:12px;color:var(--gray-500)}
+.rev-suggestion{font-size:13px;color:var(--gray-700);margin-top:4px}
+
+/* Dialog Revision inside revision panel */
+.rev-dialog{display:none;height:100%;flex-direction:column}
+.rev-dialog.show{display:flex}
+.rev-dialog-header{padding:12px 16px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:12px}
+.rev-back{cursor:pointer;font-size:18px;background:none;border:none;color:var(--gray-500)}
+.rev-dialog-body{flex:1;display:flex;overflow:hidden}
+.rev-task-nav{width:200px;border-right:1px solid var(--gray-200);overflow-y:auto;padding:8px}
+.rev-nav-item{padding:8px 10px;border-radius:6px;font-size:12px;cursor:pointer;margin-bottom:2px;display:flex;align-items:center;gap:6px;color:var(--gray-600)}
+.rev-nav-item:hover{background:var(--gray-100)}
+.rev-nav-item.active{background:var(--primary-light);color:var(--primary-dark);font-weight:600}
+.rev-nav-item.done{color:var(--success)}
+.rev-nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rev-chat-area{flex:1;display:flex;flex-direction:column}
+.rev-chat-messages{flex:1;overflow-y:auto;padding:16px}
+.rev-chat-input{padding:12px 16px;border-top:1px solid var(--gray-200);display:flex;gap:8px}
+
+/* Toast */
+.toast{position:fixed;top:80px;right:24px;padding:12px 20px;border-radius:var(--radius);font-size:14px;font-weight:600;z-index:300;transform:translateX(120%);transition:transform .3s;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateX(0)}
+.toast.success{background:var(--success);color:#fff}
+.toast.error{background:var(--danger);color:#fff}
+.toast.warning{background:var(--warning);color:#fff}
+</style>
 </head>
 <body>
-  <div class="app-container">
-    <header class="app-header">
-      <div class="header-left">
-        <div class="header-logo">标</div>
-        <span class="header-title">故障教材专家标注平台</span>
-        <span class="header-subtitle">Expert Annotation Studio</span>
-      </div>
-      <div class="header-right">
-        <a href="evaluate.html" style="font-size:13px;color:var(--text-secondary);text-decoration:none;padding:6px 12px;border-radius:6px;transition:var(--transition);">教材评测</a>
-        <button id="btnRevisionTasks" onclick="showRevisionPanel()" style="position:relative;display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;background:var(--accent-orange-dim);color:var(--accent-orange);border:1px solid rgba(245,158,11,0.2);cursor:pointer;transition:var(--transition);">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          修订任务
-          <span id="revisionBadge" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--accent-red);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">0</span>
-        </button>
-        <span class="header-badge badge-ai">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          AI 辅助生成
-        </span>
-        <span class="header-badge badge-expert">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          专家标注
-        </span>
-        <div class="user-avatar" title="当前用户">贾</div>
-      </div>
-    </header>
-
-    <main class="main-content">
-      <!-- Step Progress: 5 steps now -->
-      <div class="step-progress">
-        <div class="step-item active" data-step="1">
-          <div class="step-num">1</div>
-          <span class="step-label">选择产品大类</span>
-        </div>
-        <div class="step-connector" id="conn1"></div>
-        <div class="step-item pending" data-step="2">
-          <div class="step-num">2</div>
-          <span class="step-label">输入故障现象</span>
-        </div>
-        <div class="step-connector" id="conn2"></div>
-        <div class="step-item pending" data-step="3">
-          <div class="step-num">3</div>
-          <span class="step-label">AI 生成教材</span>
-        </div>
-        <div class="step-connector" id="conn3"></div>
-        <div class="step-item pending" data-step="4">
-          <div class="step-num">4</div>
-          <span class="step-label">三层标注</span>
-        </div>
-        <div class="step-connector" id="conn4"></div>
-        <div class="step-item pending" data-step="5">
-          <div class="step-num">5</div>
-          <span class="step-label">完成</span>
-        </div>
-      </div>
-
-      <!-- Panel 1: Product Category -->
-      <div class="panel visible" id="panel1">
-        <div class="card-section">
-          <div class="section-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg>
-            选择产品大类
-          </div>
-          <p class="section-desc">请先选择您要标注故障教材的产品类型，不同产品大类的故障体系和教材结构有所差异。</p>
-
-          <div class="category-grid" id="categoryGrid">
-            <div class="category-card" data-category="挖掘机" data-count="24">
-              <div class="category-icon" style="background:rgba(79,110,247,0.08)">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" stroke-width="1.5"><path d="M5 21h14M3 21V10l5-7h8l5 7v11"/><rect x="8" y="13" width="8" height="5" rx="1"/><path d="M9 13V8h6v5"/></svg>
-              </div>
-              <div class="category-name">挖掘机</div>
-              <div class="category-count">24 个故障教材</div>
-            </div>
-            <div class="category-card" data-category="泵车" data-count="18">
-              <div class="category-icon" style="background:rgba(34,197,94,0.08)">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              </div>
-              <div class="category-name">泵车</div>
-              <div class="category-count">18 个故障教材</div>
-            </div>
-            <div class="category-card" data-category="起重机" data-count="15">
-              <div class="category-icon" style="background:rgba(245,158,11,0.08)">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5"><path d="M2 20h20M5 20V8l7-5 7 5v12"/><path d="M9 20v-5h6v5"/></svg>
-              </div>
-              <div class="category-name">起重机</div>
-              <div class="category-count">15 个故障教材</div>
-            </div>
-            <div class="category-card" data-category="装载机" data-count="12">
-              <div class="category-icon" style="background:rgba(139,92,246,0.08)">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5"><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M5 18H3v-6l2-5h9l4 5h1v6h-2"/><path d="M5 14h14"/></svg>
-              </div>
-              <div class="category-name">装载机</div>
-              <div class="category-count">12 个故障教材</div>
-            </div>
-            <div class="category-card" data-category="摊铺机" data-count="8">
-              <div class="category-icon" style="background:rgba(6,182,212,0.08)">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5"><rect x="2" y="12" width="20" height="8" rx="2"/><path d="M6 12V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6"/><line x1="6" y1="16" x2="6" y2="16.01"/><line x1="18" y1="16" x2="18" y2="16.01"/></svg>
-              </div>
-              <div class="category-name">摊铺机</div>
-              <div class="category-count">8 个故障教材</div>
-            </div>
-            <div class="category-card" data-category="压路机" data-count="6">
-              <div class="category-icon" style="background:rgba(239,68,68,0.08)">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5"><circle cx="17" cy="17" r="5"/><circle cx="7" cy="17" r="3"/><path d="M7 14V4h10v7"/></svg>
-              </div>
-              <div class="category-name">压路机</div>
-              <div class="category-count">6 个故障教材</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="action-bar">
-          <div></div>
-          <button class="btn btn-primary btn-lg" id="btnToFault" disabled>
-            下一步：选择故障现象
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Panel 2: Fault Selection -->
-      <div class="panel" id="panel2">
-        <div class="card-section">
-          <div class="section-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            选择或输入故障现象
-            <span style="font-size:13px;font-weight:400;color:var(--text-muted);margin-left:8px" id="categoryHint"></span>
-          </div>
-          <p class="section-desc">从已有故障列表中选择，或输入新的故障现象。系统将自动判断是否已有对应教材。</p>
-
-          <div class="search-box">
-            <span class="search-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </span>
-            <input type="text" id="faultInput" placeholder="输入故障现象，如：液压系统行走无力..." autocomplete="off" />
-          </div>
-
-          <div class="tags-row" id="faultTags"></div>
-
-          <div class="material-status" id="materialStatus">
-            <div class="status-header">
-              <div class="status-icon" id="statusIcon"></div>
-              <div class="status-title" id="statusTitle"></div>
-            </div>
-            <div class="status-body" id="statusBody"></div>
-            <div class="status-meta" id="statusMeta"></div>
-          </div>
-        </div>
-
-        <div class="completed-faults" id="completedFaults" style="display:none">
-          <h4>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            已完成标注的故障
-          </h4>
-          <div id="completedFaultList"></div>
-        </div>
-
-        <div class="action-bar">
-          <button class="btn btn-secondary" id="btnBackToCategory">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-            返回选择大类
-          </button>
-          <button class="btn btn-primary btn-lg" id="btnStartGen" disabled>
-            开始生成教材
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Panel 3: AI Generating -->
-      <div class="panel" id="panel3">
-        <div class="ai-generating" id="aiGenerating">
-          <div class="ai-spinner"></div>
-          <div class="ai-gen-title">AI 正在生成故障教材...</div>
-          <div class="ai-gen-desc">基于故障现象「<span id="genFaultName"></span>」生成根因分析、剪枝规则与维修建议</div>
-          <div class="gen-progress">
-            <div class="progress-bar">
-              <div class="progress-fill" id="genProgressFill" style="width:0%"></div>
-            </div>
-            <div class="progress-text" id="genProgressText">正在分析故障现象...</div>
-          </div>
-        </div>
-
-        <div class="gen-result" id="genResult">
-          <div class="gen-summary">
-            <div class="gen-summary-header">
-              <div>
-                <div class="section-title" style="margin-bottom:4px">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  教材生成完成
-                </div>
-                <p class="section-desc" style="margin-bottom:0">故障现象「<span id="genFaultNameResult"></span>」的初版教材已就绪，请进入标注流程</p>
-              </div>
-            </div>
-            <div class="gen-stats" id="genStats">
-              <div class="gen-stat">
-                <div class="gen-stat-num" id="statRootCauses">14</div>
-                <div class="gen-stat-label">根因数量</div>
-              </div>
-              <div class="gen-stat">
-                <div class="gen-stat-num" id="statPruningRules">8</div>
-                <div class="gen-stat-label">剪枝规则</div>
-              </div>
-              <div class="gen-stat">
-                <div class="gen-stat-num" id="statRepairSuggestions">6</div>
-                <div class="gen-stat-label">维修建议</div>
-              </div>
-            </div>
-            <div class="gen-content-preview" id="genPreview"></div>
-          </div>
-
-          <div class="action-bar">
-            <button class="btn btn-secondary" id="btnBackToFault2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-              返回选择
-            </button>
-            <button class="btn btn-primary btn-lg" id="btnStartAnnotation">
-              进入三层标注
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Panel 4: Three-Layer Annotation -->
-      <div class="panel" id="panel4">
-        <div class="layer-tabs">
-          <div class="layer-tab active" data-layer="1">
-            第一层：根因列表
-            <span class="tab-badge" id="layer1Badge">14</span>
-          </div>
-          <div class="layer-tab" data-layer="2">
-            第二层：剪枝规则
-            <span class="tab-badge" id="layer2Badge">8</span>
-          </div>
-          <div class="layer-tab" data-layer="3">
-            第三层：维修建议
-            <span class="tab-badge" id="layer3Badge">6</span>
-          </div>
-        </div>
-
-        <!-- Layer 1 -->
-        <div class="layer-content visible" id="layer1">
-          <div class="layer-header">
-            <div class="layer-title-area">
-              <h3>根因列表标注</h3>
-              <p>审查 AI 生成的根因列表，剔除错误根因、增加遗漏根因、修改描述不准确之处</p>
-            </div>
-            <div class="layer-actions">
-              <button class="btn btn-sm btn-success" id="btnBatchKeep">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                批量保留选中
-              </button>
-              <button class="btn btn-sm btn-danger" id="btnBatchDelete">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                批量删除选中
-              </button>
-            </div>
-          </div>
-          <div class="root-cause-list" id="rootCauseList"></div>
-          <div class="add-cause-area">
-            <div class="add-cause-input">
-              <input type="text" id="newCauseInput" placeholder="输入遗漏的根因，按回车添加..." />
-              <button class="btn btn-sm" style="background:var(--accent-cyan-dim);color:var(--accent-cyan);border:1px solid rgba(6,182,212,0.15)" id="btnAddCause">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                添加根因
-              </button>
-            </div>
-          </div>
-          <div class="annotation-stats" id="layer1Stats"></div>
-          <div class="action-bar">
-            <button class="btn btn-secondary" id="btnLayer1Back">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-              返回
-            </button>
-            <button class="btn btn-primary" id="btnLayer1Next">
-              确认并进入下一层
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Layer 2 -->
-        <div class="layer-content" id="layer2">
-          <div class="layer-header">
-            <div class="layer-title-area">
-              <h3>剪枝规则标注</h3>
-              <p>逐段审查 AI 生成的剪枝规则，对每一段进行批注、修改或确认</p>
-            </div>
-          </div>
-          <div class="segment-list" id="pruningRuleList"></div>
-          <div class="annotation-stats" id="layer2Stats"></div>
-          <div class="action-bar">
-            <button class="btn btn-secondary" id="btnLayer2Back">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-              返回上一层
-            </button>
-            <button class="btn btn-primary" id="btnLayer2Next">
-              确认并进入下一层
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Layer 3 -->
-        <div class="layer-content" id="layer3">
-          <div class="layer-header">
-            <div class="layer-title-area">
-              <h3>维修建议标注</h3>
-              <p>逐段审查 AI 生成的维修建议，对每一段进行批注、修改或确认</p>
-            </div>
-          </div>
-          <div class="segment-list" id="repairSuggestionList"></div>
-          <div class="annotation-stats" id="layer3Stats"></div>
-          <div class="action-bar">
-            <button class="btn btn-secondary" id="btnLayer3Back">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-              返回上一层
-            </button>
-            <button class="btn btn-primary btn-lg" id="btnCompleteAnnotation">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              完成标注并提交
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Panel 5: Complete -->
-      <div class="panel" id="panel5">
-        <div class="complete-panel">
-          <div class="complete-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          </div>
-          <div class="complete-title">标注完成</div>
-          <div class="complete-desc">故障现象「<span id="completeFaultName"></span>」的教材标注已完成</div>
-          <div class="complete-summary" id="completeSummary"></div>
-          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-            <button class="btn btn-secondary btn-lg" id="btnViewDetail">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              查看标注详情
-            </button>
-            <button class="btn btn-primary btn-lg" id="btnNextFault">
-              继续标注下一个故障
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- Edit Modal -->
-    <div class="modal-overlay" id="editModal">
-      <div class="modal">
-        <div class="modal-header">
-          <span class="modal-title" id="modalTitle">编辑根因</span>
-          <button class="modal-close" id="modalClose">&times;</button>
-        </div>
-        <div class="modal-body">
-          <label id="modalLabel">根因描述</label>
-          <textarea id="modalTextarea"></textarea>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary btn-sm" id="modalCancel">取消</button>
-          <button class="btn btn-primary btn-sm" id="modalConfirm">确认修改</button>
-        </div>
-      </div>
+<div class="app">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">🔧 故障教材标注平台 v2.0</div>
+      <nav class="nav-tabs">
+        <a href="index.html" class="nav-tab active">教材标注</a>
+        <a href="evaluate.html" class="nav-tab">教材评测</a>
+      </nav>
     </div>
-
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Revision Panel Overlay -->
-    <div class="revision-overlay" id="revisionOverlay" onclick="if(event.target===this)closeRevisionPanel()">
-      <div class="revision-panel">
-        <div class="revision-header">
-          <h3>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            修订任务 - 评测反馈处理
-          </h3>
-          <button class="revision-close" onclick="closeRevisionPanel()">&times;</button>
-        </div>
-        <div class="revision-body">
-          <div class="revision-task-list"></div>
-          <div class="revision-content"></div>
-        </div>
+    <div class="header-right">
+      <div class="revision-badge" onclick="toggleRevisionPanel()">
+        📋 修订任务<span class="count" id="revCount">3</span>
       </div>
+      <div class="user-info">👤 张工 6001</div>
     </div>
+  </header>
+
+  <!-- Stepper -->
+  <div class="stepper" id="stepper"></div>
+
+  <!-- Main Content -->
+  <div class="main" id="mainContent"></div>
+</div>
+
+<!-- Revision Panel Overlay -->
+<div class="revision-overlay" id="revOverlay" onclick="toggleRevisionPanel()"></div>
+<div class="revision-panel" id="revPanel">
+  <div class="rev-header">
+    <h2>📋 修订任务</h2>
+    <button class="rev-close" onclick="toggleRevisionPanel()">✕</button>
   </div>
+  <div class="rev-body" id="revBody">
+    <!-- Task list or dialog -->
+  </div>
+</div>
 
-  <script>
-    // ===== State =====
-    const state = {
-      currentStep: 1,
-      selectedCategory: null,
-      selectedFault: null,
-      faultExists: false,
-      completedFaults: [],
-      rootCauses: [],
-      pruningRules: [],
-      repairSuggestions: [],
-      layer1Completed: false,
-      layer2Completed: false,
-      layer3Completed: false,
-      currentLayer: 1,
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ DATA ============
+const PRODUCTS = [
+  { id:'excavator', name:'挖掘机', icon:'🚜', faults:14 },
+  { id:'pump', name:'泵车', icon:'🏗️', faults:8 },
+  { id:'crane', name:'起重机', icon:'🏗️', faults:6 },
+  { id:'loader', name:'装载机', icon:'🚛', faults:5 },
+  { id:'paver', name:'摊铺机', icon:'🛣️', faults:4 },
+  { id:'roller', name:'压路机', icon:'⚙️', faults:3 }
+];
+
+const FAULTS = {
+  excavator: [
+    { id:'F001', name:'液压系统行走无力', existing:true, ver:'v2.0', mcp:{cases:23,experts:4} },
+    { id:'F002', name:'发动机启动困难', existing:true, ver:'v1.3', mcp:{cases:15,experts:3} },
+    { id:'F003', name:'回转系统异响', existing:true, ver:'v1.1', mcp:{cases:8,experts:2} },
+    { id:'F004', name:'工作装置动作缓慢', existing:false, mcp:{cases:3,experts:1} },
+    { id:'F005', name:'液压油温过高', existing:true, ver:'v1.5', mcp:{cases:18,experts:3} }
+  ],
+  pump: [
+    { id:'F101', name:'泵送压力不足', existing:true, ver:'v1.2', mcp:{cases:12,experts:2} },
+    { id:'F102', name:'臂架动作不稳定', existing:false, mcp:{cases:2,experts:1} }
+  ]
+};
+
+const TEXTBOOK = {
+  rootCauses: [
+    { id:'RC1', text:'行走马达溢流阀故障', status:'kept' },
+    { id:'RC2', text:'行走马达内部故障（排量调节机构卡滞、柱塞磨损）', status:'kept' },
+    { id:'RC3', text:'主泵先导压力不足', status:'kept' },
+    { id:'RC4', text:'主溢流阀设定压力偏低或故障', status:'kept' },
+    { id:'RC5', text:'液压油流量调节阀卡滞或损坏', status:'kept' },
+    { id:'RC6', text:'中央回转接头油封损坏导致行走系统泄压', status:'kept' },
+    { id:'RC7', text:'行走比例电磁阀故障', status:'kept' },
+    { id:'RC8', text:'行走先导压力不足', status:'kept' },
+    { id:'RC9', text:'LS压力传感器故障', status:'kept' },
+    { id:'RC10', text:'液压油污染或变质', status:'kept' },
+    { id:'RC11', text:'液压主泵故障（功率控制阀磨损、配流盘磨损）', status:'kept' },
+    { id:'RC12', text:'液压泵变量活塞不回位', status:'kept' },
+    { id:'RC13', text:'冲洗阀故障', status:'kept' }
+  ],
+  pruningRules: [
+    { id:'PR1', text:'若单侧行走无力，优先排查中央回转接头和行走马达', status:'pending' },
+    { id:'PR2', text:'若双侧行走无力，优先检查主泵压力和先导系统', status:'pending' },
+    { id:'PR3', text:'行走速度异常时，先检查比例电磁阀和先导压力', status:'pending' },
+    { id:'PR4', text:'液压油温超过90℃时，暂停排查并检查冷却系统', status:'pending' }
+  ],
+  repairAdvice: [
+    { id:'RA1', text:'溢流阀故障：更换或清洗溢流阀芯，调整设定压力至标准值', status:'pending' },
+    { id:'RA2', text:'行走马达内部故障：拆检马达，更换磨损的柱塞和配流盘', status:'pending' },
+    { id:'RA3', text:'先导压力不足：检查先导泵和先导阀，补充液压油或更换密封件', status:'pending' },
+    { id:'RA4', text:'液压油污染：更换液压油，清洗油路和滤芯', status:'pending' }
+  ]
+};
+
+const REVISION_TASKS = [
+  { id:'REV-001', type:'root_cause', priority:'high', source:'评测 EVAL-001', fault:'液压系统行走无力',
+    desc:'根因"液压主泵故障"被评测标记为【错误根因】', suggestion:'修改为"液压主泵功率控制阀磨损"', status:'pending' },
+  { id:'REV-002', type:'path', priority:'medium', source:'评测 EVAL-001', fault:'液压系统行走无力',
+    desc:'排查步骤3顺序错误，应先检查先导压力', suggestion:'调整步骤3和4的顺序', status:'pending' },
+  { id:'REV-003', type:'root_cause', priority:'low', source:'评测 EVAL-002', fault:'液压油温过高',
+    desc:'遗漏根因"冲洗阀故障"', suggestion:'新增根因"冲洗阀故障（常见于8吨以上机型）"', status:'pending' }
+];
+
+const CHAT_HISTORY = [
+  { role:'ai', phase:'reasoning', text:'分析教材《液压系统行走无力》当前状态...\n📋 共13条根因，0条标注修改\n🔍 建议从高频故障点开始标注\n\n首先请审查根因列表，哪些是明显正确的，可以批量标记为"保留"？' },
+  { role:'ai', phase:'acting', text:'已为您准备根因列表，请逐条审核：\n\n1. 行走马达溢流阀故障\n2. 行走马达内部故障（排量调节机构卡滞、柱塞磨损）\n3. 主泵先导压力不足\n...\n\n您可以：\n- 点击"保留"确认正确\n- 点击"删除"标记错误\n- 点击"修改"调整描述\n- 使用工具栏"批量标注"一次处理多个' }
+];
+
+// ============ STATE ============
+let state = {
+  step: 1,
+  product: null,
+  fault: null,
+  faultStatus: null,
+  chatHistory: [...CHAT_HISTORY],
+  activeModule: 'rootCauses',
+  hookResults: { quality:'idle', consistency:'idle', sync:'idle' },
+  gymStatus: 'idle',
+  gymScore: null,
+  textbook: JSON.parse(JSON.stringify(TEXTBOOK)),
+  newRcText: '',
+  revisionMode: null,
+  revisionDialog: false
+};
+
+const STEPS = ['选择产品大类','选择故障现象','AI生成教材','ReAct标注','AgentGym验证','发布'];
+
+// ============ RENDER ============
+function render() {
+  renderStepper();
+  renderMain();
+}
+
+function renderStepper() {
+  const el = document.getElementById('stepper');
+  el.innerHTML = STEPS.map((s,i) => {
+    const cls = i+1 < state.step ? 'done' : i+1 === state.step ? 'active' : '';
+    const sep = i < STEPS.length-1 ? '<div class="step-sep"></div>' : '';
+    return `<div class="step-item ${cls}"><div class="step-num">${i+1 < state.step ? '✓' : i+1}</div><div class="step-label">${s}</div></div>${sep}`;
+  }).join('');
+}
+
+function renderMain() {
+  const el = document.getElementById('mainContent');
+  switch(state.step) {
+    case 1: el.innerHTML = renderStep1(); break;
+    case 2: el.innerHTML = renderStep2(); break;
+    case 3: el.innerHTML = renderStep3(); break;
+    case 4: el.innerHTML = renderStep4(); break;
+    case 5: el.innerHTML = renderStep5(); break;
+    case 6: el.innerHTML = renderStep6(); break;
+  }
+}
+
+function renderStep1() {
+  return `<div class="card"><div class="card-title">📦 选择产品大类</div>
+    <div class="product-grid">
+      ${PRODUCTS.map(p => `<div class="product-card ${state.product===p.id?'selected':''}" onclick="selectProduct('${p.id}')">
+        <div class="product-icon">${p.icon}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-count">${p.faults}个故障现象</div>
+      </div>`).join('')}
+    </div>
+    ${state.product ? `<div style="margin-top:16px;text-align:right"><button class="btn btn-primary" onclick="goStep(2)">下一步 →</button></div>` : ''}
+  </div>`;
+}
+
+function renderStep2() {
+  const faults = FAULTS[state.product] || [];
+  return `<div class="card"><div class="card-title">🔍 选择或输入故障现象</div>
+    <input class="search-box" placeholder="搜索故障现象..." oninput="filterFaults(this.value)">
+    <div class="fault-tags" id="faultTags">
+      ${faults.map(f => `<div class="fault-tag ${f.existing?'existing':'new-fault'}" onclick="selectFault('${f.id}')">
+        ${f.name}
+        <span class="badge">${f.existing?'已有 '+f.ver:'新增'}</span>
+      </div>`).join('')}
+    </div>
+    ${state.fault ? renderFaultDetail() : ''}
+    ${state.fault ? `<div style="margin-top:16px;text-align:right"><button class="btn btn-primary" onclick="goStep(3)">下一步 →</button></div>` : ''}
+  </div>`;
+}
+
+function renderFaultDetail() {
+  const faults = FAULTS[state.product] || [];
+  const f = faults.find(x => x.id === state.fault);
+  if (!f) return '';
+  const isExisting = f.existing;
+  return `<div class="card" style="margin-top:16px;border-color:${isExisting?'#86EFAC':'#FDE68A'}">
+    <div class="card-title">${isExisting?'📝 修改已有教材':'➕ 新增教材'} - ${f.name}</div>
+    ${isExisting ? `<div class="stat-row"><span>当前版本</span><span class="stat-val blue">${f.ver}</span></div>` : ''}
+    <div class="mcp-card" style="margin-top:8px">
+      <div class="mcp-source">💡 MCP-CaseDatabase</div>
+      <div class="mcp-content">找到 ${f.mcp.cases} 条相关真实案例，${f.mcp.experts} 位专家有类似标注经验</div>
+    </div>
+  </div>`;
+}
+
+function renderStep3() {
+  return `<div class="card">
+    <div class="card-title">🤖 AI 生成初版教材</div>
+    <div class="gen-progress">
+      <div class="gen-bar"><div class="gen-fill" id="genFill"></div></div>
+      <div class="gen-stage" id="genStage">准备中...</div>
+    </div>
+    <div id="genResult" style="display:none">
+      <div class="gen-summary">
+        <div class="gen-stat"><div class="num">13</div><div class="label">可能根因</div></div>
+        <div class="gen-stat"><div class="num">4</div><div class="label">剪枝规则</div></div>
+        <div class="gen-stat"><div class="num">4</div><div class="label">维修建议</div></div>
+      </div>
+      <div class="mcp-card" style="margin-top:12px">
+        <div class="mcp-source">📚 MCP-KnowledgeBase</div>
+        <div class="mcp-content">参考了 5 份技术文档、3 份维修手册</div>
+      </div>
+      <div class="mcp-card">
+        <div class="mcp-source">💡 MCP-CaseDatabase</div>
+        <div class="mcp-content">基于 23 条真实维修案例生成</div>
+      </div>
+      <div class="mcp-card">
+        <div class="mcp-source">👤 MCP-ExpertDatabase</div>
+        <div class="mcp-content">匹配 4 位领域专家历史标注</div>
+      </div>
+      <div style="margin-top:16px;text-align:right"><button class="btn btn-primary" onclick="goStep(4)">开始 ReAct 标注 →</button></div>
+    </div>
+  </div>`;
+}
+
+function renderStep4() {
+  return `<div class="react-layout">
+    <div class="chat-area">
+      <div class="chat-header">💬 ReAct 标注对话 <span style="font-weight:400;color:var(--gray-400);font-size:12px">— AI推理与行动循环</span></div>
+      <div class="chat-messages" id="chatMessages">
+        ${state.chatHistory.map(m => renderChatMsg(m)).join('')}
+      </div>
+      <div class="chat-input-area">
+        <div class="tool-bar">
+          <button class="tool-btn" onclick="useTool('plan')" title="多步骤标注计划">📋 Plan</button>
+          <button class="tool-btn" onclick="useTool('delegation')" title="委派AI批量任务">📤 委派</button>
+          <button class="tool-btn" onclick="useTool('batch')" title="批量标注相似教材">📦 批量</button>
+          <button class="tool-btn" onclick="useTool('search')" title="检索相关知识">🔍 检索</button>
+        </div>
+        <div class="input-row">
+          <input class="chat-input" id="chatInput" placeholder="输入消息或指令..." onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="send-btn" onclick="sendChat()">发送</button>
+        </div>
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="quickChat('全部保留不变')">✅ 全部保留</button>
+          <button class="quick-btn" onclick="quickChat('查看原教材')">📖 查看原教材</button>
+          <button class="quick-btn" onclick="quickChat('回退上条')">↩️ 回退</button>
+          <button class="quick-btn" onclick="showAnnotationPanel()">📝 结构化标注</button>
+          <button class="quick-btn" onclick="goStep(5)">▶️ 完成标注</button>
+        </div>
+      </div>
+    </div>
+    <div class="side-panel">
+      <div class="side-card">
+        <div class="side-card-header">🧪 AgentGym 仿真</div>
+        <div class="side-card-body">
+          <div class="gym-status">
+            <div class="gym-dot ${state.gymStatus}"></div>
+            <span style="font-size:12px">${{idle:'待标注完成后测试',running:'仿真测试中...',pass:'仿真通过',fail:'仿真未通过'}[state.gymStatus]}</span>
+          </div>
+          ${state.gymScore !== null ? `
+          <div style="margin-top:8px"><span class="gym-score">${state.gymScore}</span><span style="font-size:12px;color:var(--gray-500)">/100</span></div>
+          <div class="gym-items">
+            <div class="gym-item">✅ 完整度: 优秀</div>
+            <div class="gym-item">✅ 逻辑性: 优秀</div>
+            <div class="gym-item">✅ 可达性: 优秀</div>
+            <div class="gym-item">⚠️ 安全性: 需注意</div>
+          </div>` : ''}
+        </div>
+      </div>
+      <div class="side-card">
+        <div class="side-card-header">🪝 Hook 检查点</div>
+        <div class="side-card-body">
+          <ul class="hook-list">
+            <li class="hook-item"><span class="hook-status">${hookIcon(state.hookResults.quality)}</span> 质量检查</li>
+            <li class="hook-item"><span class="hook-status">${hookIcon(state.hookResults.consistency)}</span> 一致性检查</li>
+            <li class="hook-item"><span class="hook-status">${hookIcon(state.hookResults.sync)}</span> 联动同步</li>
+          </ul>
+        </div>
+      </div>
+      <div class="side-card">
+        <div class="side-card-header">📖 教材版本</div>
+        <div class="side-card-body">
+          <div class="version-info">当前: v2.0 | 修订后: v2.1</div>
+          <div style="font-size:12px;color:var(--gray-500)">13根因 · 4规则 · 4建议</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderChatMsg(m) {
+  if (m.role === 'ai') {
+    const phaseTag = m.phase ? `<span class="react-tag ${m.phase}">${{reasoning:'Reasoning',acting:'Acting',hook:'Hook',gym:'AgentGym',mcp:'MCP'}[m.phase]}</span>` : '';
+    const hookHtml = m.hookAlert ? `<div class="hook-alert ${m.hookAlert.type}"><span class="hook-icon">${m.hookAlert.type==='pass'?'✅':m.hookAlert.type==='warn'?'⚠️':'🚫'}</span><span>${m.hookAlert.text}</span></div>` : '';
+    const gymHtml = m.gymResult ? `<div class="gym-result"><span class="gym-score">${m.gymResult.score}</span><span style="font-size:12px;color:var(--gray-500)">/100</span><div class="gym-items">${m.gymResult.items.map(i => `<div class="gym-item">${i}</div>`).join('')}</div></div>` : '';
+    const mcpHtml = m.mcpCard ? `<div class="mcp-inline"><div class="mcp-label">${m.mcpCard.source}</div><div>${m.mcpCard.text}</div></div>` : '';
+    return `<div class="chat-msg ai"><div>${phaseTag}</div><div class="msg-bubble">${m.text.replace(/\n/g,'<br>')}${hookHtml}${gymHtml}${mcpHtml}</div><div class="msg-meta">AI Assistant</div></div>`;
+  }
+  return `<div class="chat-msg expert"><div class="msg-bubble">${m.text.replace(/\n/g,'<br>')}</div><div class="msg-meta">👤 专家</div></div>`;
+}
+
+function hookIcon(status) {
+  return {idle:'⏳',pass:'✅',warn:'⚠️',block:'🚫',running:'🔄'}[status] || '⏳';
+}
+
+function renderStep5() {
+  return `<div class="card">
+    <div class="card-title">🧪 AgentGym 仿真验证</div>
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:48px;margin-bottom:12px">🧪</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">仿真测试进行中...</div>
+      <div style="font-size:13px;color:var(--gray-500)">正在验证教材质量</div>
+      <div class="gen-progress" style="max-width:400px;margin:20px auto">
+        <div class="gen-bar"><div class="gen-fill" id="gymFill"></div></div>
+        <div class="gen-stage" id="gymStage">初始化测试环境...</div>
+      </div>
+    </div>
+    <div id="gymResult" style="display:none">
+      <div class="card" style="background:var(--gym-bg);border-color:#D8B4FE">
+        <div class="card-title">📊 仿真报告</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+          <div class="gym-score" style="font-size:40px">85</div>
+          <div><div style="font-weight:600">综合评分</div><div style="font-size:13px;color:var(--gray-500)">可发布（需确认1项风险）</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="gym-item" style="padding:8px;background:#fff;border-radius:6px">✅ 完整度: 优秀</div>
+          <div class="gym-item" style="padding:8px;background:#fff;border-radius:6px">⚠️ 逻辑性: 良好（1条建议）</div>
+          <div class="gym-item" style="padding:8px;background:#fff;border-radius:6px">✅ 可达性: 优秀</div>
+          <div class="gym-item" style="padding:8px;background:#fff;border-radius:6px">⚠️ 安全性: 需注意</div>
+        </div>
+        <div class="hook-alert warn" style="margin-top:12px"><span class="hook-icon">⚠️</span><span>步骤5涉及拆解液压泵，建议增加"操作前需停机"的安全警告</span></div>
+      </div>
+      <div class="btn-group" style="justify-content:center">
+        <button class="btn" onclick="goStep(4)">↩️ 返回修改</button>
+        <button class="btn btn-success" onclick="goStep(6)">✅ 确认并发布</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderStep6() {
+  const tb = state.textbook;
+  const kept = tb.rootCauses.filter(r=>r.status==='kept').length;
+  const deleted = tb.rootCauses.filter(r=>r.status==='deleted').length;
+  const modified = tb.rootCauses.filter(r=>r.status==='modified').length;
+  const added = tb.rootCauses.filter(r=>r.status==='new').length;
+  return `<div class="card">
+    <div class="card-title">✅ 标注完成</div>
+    <div class="publish-summary">
+      <div class="summary-card">
+        <h3>📊 标注统计</h3>
+        <div class="stat-row"><span>根因总数</span><span class="stat-val blue">${tb.rootCauses.length}</span></div>
+        <div class="stat-row"><span>保留</span><span class="stat-val green">${kept}</span></div>
+        <div class="stat-row"><span>删除</span><span class="stat-val red">${deleted}</span></div>
+        <div class="stat-row"><span>修改</span><span class="stat-val blue">${modified}</span></div>
+        <div class="stat-row"><span>新增</span><span class="stat-val amber">${added}</span></div>
+      </div>
+      <div class="summary-card">
+        <h3>🧪 AgentGym 评分</h3>
+        <div class="stat-row"><span>综合评分</span><span class="stat-val blue">85/100</span></div>
+        <div class="stat-row"><span>完整度</span><span class="stat-val green">优秀</span></div>
+        <div class="stat-row"><span>逻辑性</span><span class="stat-val amber">良好</span></div>
+        <div class="stat-row"><span>可达性</span><span class="stat-val green">优秀</span></div>
+        <div class="stat-row"><span>安全性</span><span class="stat-val amber">需注意</span></div>
+      </div>
+      <div class="summary-card">
+        <h3>🪝 Hook 检查结果</h3>
+        <div class="stat-row"><span>质量检查</span><span class="stat-val green">✅ 通过</span></div>
+        <div class="stat-row"><span>一致性检查</span><span class="stat-val green">✅ 通过</span></div>
+        <div class="stat-row"><span>联动同步</span><span class="stat-val green">✅ 已触发</span></div>
+      </div>
+      <div class="summary-card">
+        <h3>📦 版本信息</h3>
+        <div class="stat-row"><span>版本号</span><span class="stat-val blue">v2.1</span></div>
+        <div class="stat-row"><span>修改内容</span><span style="font-size:12px">删除1根因,修改2规则</span></div>
+        <div class="stat-row"><span>诊断报告</span><span class="stat-val green">已重新生成</span></div>
+      </div>
+    </div>
+    <div class="btn-group" style="justify-content:center;margin-top:24px">
+      <button class="btn" onclick="goStep(1)">🏠 返回首页</button>
+      <button class="btn btn-primary" onclick="continueNext()">➡️ 继续下一个故障</button>
+    </div>
+  </div>`;
+}
+
+// ============ ACTIONS ============
+function selectProduct(id) {
+  state.product = id;
+  state.fault = null;
+  render();
+}
+
+function selectFault(id) {
+  state.fault = id;
+  const faults = FAULTS[state.product] || [];
+  const f = faults.find(x => x.id === id);
+  state.faultStatus = f.existing ? 'existing' : 'new';
+  render();
+}
+
+function filterFaults(val) {
+  // Simple filter - just re-render tags
+  const faults = FAULTS[state.product] || [];
+  const el = document.getElementById('faultTags');
+  if (!el) return;
+  const filtered = val ? faults.filter(f => f.name.includes(val)) : faults;
+  el.innerHTML = filtered.map(f => `<div class="fault-tag ${f.existing?'existing':'new-fault'}" onclick="selectFault('${f.id}')">
+    ${f.name}<span class="badge">${f.existing?'已有 '+f.ver:'新增'}</span></div>`).join('');
+}
+
+function goStep(n) {
+  state.step = n;
+  render();
+  if (n === 3) startGeneration();
+  if (n === 5) startGymTest();
+}
+
+function startGeneration() {
+  const stages = [
+    { pct:20, text:'📚 MCP-KnowledgeBase: 检索技术文档...' },
+    { pct:40, text:'💡 MCP-CaseDatabase: 获取真实维修案例...' },
+    { pct:60, text:'👤 MCP-ExpertDatabase: 匹配专家历史标注...' },
+    { pct:80, text:'🤖 AI 生成教材结构...' },
+    { pct:100, text:'✅ 教材生成完成！' }
+  ];
+  let i = 0;
+  const timer = setInterval(() => {
+    if (i >= stages.length) { clearInterval(timer); document.getElementById('genResult').style.display='block'; return; }
+    document.getElementById('genFill').style.width = stages[i].pct + '%';
+    document.getElementById('genStage').textContent = stages[i].text;
+    i++;
+  }, 600);
+}
+
+function startGymTest() {
+  const stages = [
+    { pct:25, text:'加载教材知识...' },
+    { pct:50, text:'生成测试场景...' },
+    { pct:75, text:'执行仿真诊断...' },
+    { pct:100, text:'生成仿真报告...' }
+  ];
+  let i = 0;
+  const timer = setInterval(() => {
+    if (i >= stages.length) { clearInterval(timer); document.getElementById('gymResult').style.display='block'; return; }
+    const fill = document.getElementById('gymFill');
+    const stage = document.getElementById('gymStage');
+    if (fill) fill.style.width = stages[i].pct + '%';
+    if (stage) stage.textContent = stages[i].text;
+    i++;
+  }, 800);
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  state.chatHistory.push({ role:'expert', text });
+  // Simulate AI ReAct response
+  setTimeout(() => {
+    const response = generateReactResponse(text);
+    state.chatHistory.push(response);
+    if (response.hookTrigger) {
+      state.hookResults = { ...state.hookResults, ...response.hookTrigger };
+    }
+    if (response.gymUpdate) {
+      state.gymStatus = response.gymUpdate.status;
+      state.gymScore = response.gymUpdate.score;
+    }
+    render();
+    scrollChat();
+  }, 500);
+  render();
+  scrollChat();
+}
+
+function quickChat(text) {
+  document.getElementById('chatInput').value = text;
+  sendChat();
+}
+
+function generateReactResponse(input) {
+  const lower = input.toLowerCase();
+  if (lower.includes('保留') || lower.includes('正确')) {
+    return { role:'ai', phase:'reasoning', text:'分析您的标注意图：批量保留根因...\n🔍 检查所有根因的合理性...',
+      hookAlert:{ type:'pass', text:'🪝 Hook-质量检查: 所有根因参数完整，风险等级合理' },
+      gymResult:{ score:85, items:['✅ 完整度: 优秀','✅ 逻辑性: 优秀','⚠️ 安全性: 1项需确认'] }
     };
-
-    // ===== Mock Data by Category =====
-    const categoryFaults = {
-      '挖掘机': [
-        { name: '液压系统行走无力', exists: true },
-        { name: '发动机启动困难', exists: true },
-        { name: '回转系统异响', exists: true },
-        { name: '工作装置动作缓慢', exists: false },
-        { name: '电气系统报警', exists: true },
-        { name: '空调系统不制冷', exists: false },
-      ],
-      '泵车': [
-        { name: '泵送压力不足', exists: true },
-        { name: '臂架动作异常', exists: true },
-        { name: 'S阀换向故障', exists: false },
-        { name: '液压油温过高', exists: true },
-      ],
-      '起重机': [
-        { name: '卷扬机异响', exists: true },
-        { name: '伸缩臂不同步', exists: true },
-        { name: '回转制动失灵', exists: false },
-        { name: '支腿油缸下沉', exists: true },
-      ],
-      '装载机': [
-        { name: '铲斗无力', exists: true },
-        { name: '转向沉重', exists: true },
-        { name: '变速箱跳挡', exists: false },
-      ],
-      '摊铺机': [
-        { name: '熨平板加热不均', exists: true },
-        { name: '螺旋分料不均', exists: false },
-        { name: '行走跑偏', exists: true },
-      ],
-      '压路机': [
-        { name: '振动频率异常', exists: true },
-        { name: '行走速度不稳', exists: false },
-      ],
+  }
+  if (lower.includes('删除') || lower.includes('错误')) {
+    return { role:'ai', phase:'reasoning', text:'分析删除操作的合理性...\n⚠️ 该根因被2个其他教材引用，删除可能产生关联冲突',
+      hookAlert:{ type:'warn', text:'🪝 Hook-一致性检查: "液压主泵故障"被《液压油温过高》教材引用，建议同步修改' },
+      mcpCard:{ source:'💡 MCP-CaseDatabase', text:'近3个案例中该根因均被排除，删除建议合理' }
     };
-
-    const mockFaultData = {
-      '液压系统行走无力': {
-        exists: true,
-        rootCauses: [
-          { id: 1, title: '行走马达溢流阀故障', desc: '高频故障点，有案例支持', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 2, title: '行走马达内部故障（排量调节机构卡滞、柱塞磨损）', desc: '涉及排量调节机构卡滞、柱塞磨损', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 3, title: '主泵先导压力不足', desc: '先导压力不足会导致主泵排量无法正常调节', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 4, title: '主溢流阀设定压力偏低或故障', desc: '系统压力不足导致行走无力', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 5, title: '液压油流量调节阀卡滞或损坏', desc: '影响液压油流量分配', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 6, title: '中央回转接头油封损坏导致行走系统泄压', desc: '单侧行走无力典型原因，有案例支持', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 7, title: '行走比例电磁阀故障', desc: '影响行走速度比例控制', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 8, title: '行走先导压力不足', desc: '先导压力不足影响行走操作信号传递', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 9, title: 'LS压力传感器故障', desc: '负载传感信号异常导致泵排量调节不当', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 10, title: '液压油污染或变质', desc: '液压油污染会导致多类阀件卡滞', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 11, title: '液压泵伺服活塞挡块O型圈损坏', desc: '导致伺服活塞无法正常工作', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 12, title: '液压泵变量活塞不回位', desc: '变量机构卡滞导致排量异常', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 13, title: '冲洗阀故障', desc: '冲洗阀故障影响闭式回路换油', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 14, title: '液压主泵故障（功率控制阀磨损、配流盘磨损）', desc: '该描述与根因3、4重叠，建议删除或合并', aiSuggestion: '建议删除', status: 'pending' },
-        ],
-        pruningRules: [
-          { id: 1, title: '观察行走速度', text: '如果双侧行走速度均缓慢，重点检查主泵、主溢流阀和液压油品质；如果仅单侧缓慢，优先检查中央回转接头和对应侧行走马达。', status: 'pending' },
-          { id: 2, title: '检查先导压力', text: '测量行走先导压力，正常值应为3.9±0.2MPa。若压力不足，检查先导泵、先导滤芯及先导溢流阀；若压力正常，排除先导系统问题。', status: 'pending' },
-          { id: 3, title: '检查主泵压力', text: '在行走操作时测量主泵输出压力，正常值应为34.3±1.0MPa。若压力偏低，需检查主溢流阀设定值、主泵伺服机构及变量活塞。', status: 'pending' },
-          { id: 4, title: '液压油品质检测', text: '抽取液压油样本检查清洁度（NAS等级应≤9级）、含水量（≤0.1%）和粘度。若油液污染严重，需更换液压油并清洗系统。', status: 'pending' },
-          { id: 5, title: '行走马达测试', text: '拆解行走马达检查溢流阀设定值、柱塞磨损量和配流盘状况。溢流阀设定值应为34.3±1.5MPa，柱塞间隙不应超过0.05mm。', status: 'pending' },
-          { id: 6, title: '中央回转接头检查', text: '检查回转接头油封是否损坏，可通过在回转接头处测量行走压力来判定。若旋转时压力波动大或泄压，则需更换油封。', status: 'pending' },
-          { id: 7, title: 'LS系统检查', text: '测量LS压力差，正常情况下压差应在0.5-2.0MPa范围内。若压差异常，检查LS溢流阀、LS传感器和相关管路。', status: 'pending' },
-          { id: 8, title: '电磁阀检测', text: '使用万用表测量行走比例电磁阀电阻（正常值20-30Ω）和电流值。若电磁阀故障，需更换电磁阀或检查控制器输出信号。', status: 'pending' },
-        ],
-        repairSuggestions: [
-          { id: 1, title: '更换行走马达溢流阀', text: '拆下溢流阀，检查阀芯和弹簧状态。若阀芯有磨损痕迹或弹簧疲劳变形，需更换溢流阀总成。安装后需重新校准压力设定值至34.3±1.5MPa。', status: 'pending' },
-          { id: 2, title: '修复行走马达内部故障', text: '分解行走马达，检查柱塞、缸体和配流盘磨损情况。柱塞与缸体间隙超过0.05mm时需更换柱塞副；配流盘有划痕需研磨或更换。', status: 'pending' },
-          { id: 3, title: '调整主泵先导压力', text: '连接压力表至先导系统测压口，调整先导溢流阀至3.9±0.2MPa。若调整无效，检查先导泵内漏和先导滤芯是否堵塞。', status: 'pending' },
-          { id: 4, title: '更换中央回转接头油封', text: '拆卸中央回转接头，更换所有油封和O型圈。安装时注意油封方向和润滑，安装完成后需进行压力测试确认无泄漏。', status: 'pending' },
-          { id: 5, title: '液压油更换与系统清洗', text: '排放旧液压油，更换回油滤芯和吸油滤芯。使用专用清洗油循环清洗系统30分钟以上，再加入新液压油至规定液位。', status: 'pending' },
-          { id: 6, title: '更换行走比例电磁阀', text: '测量电磁阀电阻和电流确认故障后，更换电磁阀。安装后需进行行走速度标定，确保左右行走速度一致，偏差不超过5%。', status: 'pending' },
-        ],
-        meta: { author: '贾琳琳', version: 'v2.3', lastUpdate: '2025-04-28' },
-      },
+  }
+  if (lower.includes('修改') || lower.includes('调整')) {
+    return { role:'ai', phase:'acting', text:'执行修改建议生成...\n✏️ 将"液压主泵故障"修改为"液压主泵功率控制阀磨损"\n\n正在提交 AgentGym 仿真测试...',
+      gymResult:{ score:88, items:['✅ 完整度: 优秀','✅ 逻辑性: 优秀','✅ 可达性: 优秀','⚠️ 安全性: 需确认'] }
     };
+  }
+  if (lower.includes('回退')) {
+    return { role:'ai', phase:'acting', text:'已回退上一次操作。当前状态恢复到修改前。' };
+  }
+  // Default response
+  return { role:'ai', phase:'reasoning', text:`分析您的输入："${input}"\n\n正在理解您的意图...请确认您希望对哪个部分进行什么操作？` };
+}
 
-    // ===== Utility =====
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const icons = { success: '\u2713', warning: '\u26A0', error: '\u2717', info: '\u2139' };
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.innerHTML = `<span>${icons[type] || ''}</span><span>${message}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
+function scrollChat() {
+  setTimeout(() => {
+    const el = document.getElementById('chatMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+  }, 50);
+}
 
-    function goToStep(step) {
-      state.currentStep = step;
-      document.querySelectorAll('.step-item').forEach(el => {
-        const s = parseInt(el.dataset.step);
-        el.classList.remove('active', 'completed', 'pending');
-        if (s === step) el.classList.add('active');
-        else if (s < step) el.classList.add('completed');
-        else el.classList.add('pending');
-      });
-      ['conn1', 'conn2', 'conn3', 'conn4'].forEach((id, i) => {
-        const el = document.getElementById(id);
-        if (el) el.classList.toggle('done', i + 1 < step);
-      });
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('visible'));
-      document.getElementById(`panel${step}`).classList.add('visible');
-    }
+function useTool(tool) {
+  const msgs = {
+    plan: { role:'ai', phase:'acting', text:'📋 Plan 工具已激活\n\n请告诉我您的标注计划，我将帮您分解步骤：\n1. 每步修改什么内容\n2. 修改的优先级\n3. 预期的仿真测试结果\n\n示例："我打算分3步：1.调整步骤2参数；2.增加检测点；3.补充注意事项"' },
+    delegation: { role:'ai', phase:'acting', text:'📤 委派工具已激活\n\n您可以委派我完成批量任务：\n- "把所有液压系统教材中步骤1的压力检测统一"\n- "检查所有教材中是否有遗漏的安全警告"\n\n请描述您的委派任务：', mcpCard:{ source:'📚 MCP-KnowledgeBase', text:'找到5份相关教材，可批量处理' } },
+    batch: { role:'ai', phase:'acting', text:'📦 批量标注工具已激活\n\n已识别到3个相似故障现象：\n1. 液压系统行走无力\n2. 液压系统动作缓慢\n3. 液压系统压力不足\n\n您可以一次性确认相同的修改：', mcpCard:{ source:'💡 MCP-CaseDatabase', text:'3个故障共涉及15条相似根因' } },
+    search: { role:'ai', phase:'acting', text:'🔍 知识检索工具已激活\n\n正在搜索相关知识...', mcpCard:{ source:'📚 MCP-KnowledgeBase', text:'找到3位专家对类似故障的标注记录，是否查看？' } }
+  };
+  state.chatHistory.push(msgs[tool]);
+  render();
+  scrollChat();
+}
 
-    // ===== Panel 1: Product Category =====
-    const categoryGrid = document.getElementById('categoryGrid');
-    const btnToFault = document.getElementById('btnToFault');
-
-    categoryGrid.addEventListener('click', (e) => {
-      const card = e.target.closest('.category-card');
-      if (!card) return;
-      state.selectedCategory = card.dataset.category;
-      document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      btnToFault.disabled = false;
-      showToast(`已选择产品大类：${state.selectedCategory}`, 'info');
+function showAnnotationPanel() {
+  // Toggle annotation content in chat
+  const tb = state.textbook;
+  let html = '<div class="card-title">📝 结构化标注</div>';
+  html += '<div class="module-tab">';
+  ['rootCauses','pruningRules','repairAdvice'].forEach(m => {
+    const labels = {rootCauses:'根因列表',pruningRules:'剪枝规则',repairAdvice:'维修建议'};
+    html += `<button class="module-tab-btn ${state.activeModule===m?'active':''}" onclick="switchModule('${m}')">${labels[m]}</button>`;
+  });
+  html += '</div>';
+  if (state.activeModule === 'rootCauses') {
+    tb.rootCauses.forEach((rc,i) => {
+      html += `<div class="root-cause-item">
+        <span class="rc-num">${i+1}</span>
+        <span class="rc-text">${rc.text}</span>
+        ${rc.status!=='kept'?`<span class="rc-badge ${rc.status}">${{kept:'保留',deleted:'已删',modified:'已改',new:'新增'}[rc.status]}</span>`:''}
+        <div class="rc-actions">
+          <button class="rc-btn keep ${rc.status==='kept'?'active':''}" onclick="setRcStatus('${rc.id}','kept')">保留</button>
+          <button class="rc-btn delete ${rc.status==='deleted'?'active':''}" onclick="setRcStatus('${rc.id}','deleted')">删除</button>
+          <button class="rc-btn edit ${rc.status==='modified'?'active':''}" onclick="setRcStatus('${rc.id}','modified')">修改</button>
+        </div>
+      </div>`;
     });
-
-    btnToFault.addEventListener('click', () => {
-      if (!state.selectedCategory) return;
-      goToStep(2);
-      document.getElementById('categoryHint').textContent = `当前产品：${state.selectedCategory}`;
-      renderFaultTags();
+    html += `<div class="add-rc"><input placeholder="输入新增根因描述..." id="newRcInput" value="${state.newRcText}" oninput="state.newRcText=this.value"><button class="btn btn-primary" style="padding:8px 16px;font-size:13px" onclick="addRootCause()">+ 新增</button></div>`;
+  } else {
+    const items = tb[state.activeModule];
+    items.forEach((item,i) => {
+      html += `<div class="segment">
+        <div class="segment-text">${i+1}. ${item.text}</div>
+        <div class="segment-actions">
+          <button class="seg-btn approve ${item.status==='approved'?'active':''}" onclick="setSegStatus('${state.activeModule}','${item.id}','approved')">✅ 通过</button>
+          <button class="seg-btn modify ${item.status==='modified'?'active':''}" onclick="setSegStatus('${state.activeModule}','${item.id}','modified')">✏️ 修改</button>
+          <button class="seg-btn reject ${item.status==='rejected'?'active':''}" onclick="setSegStatus('${state.activeModule}','${item.id}','rejected')">❌ 驳回</button>
+        </div>
+        <div class="modify-box ${item.status==='modified'?'show':''}" id="mod-${item.id}">
+          <textarea placeholder="输入修改内容...">${item.modifiedText||''}</textarea>
+        </div>
+      </div>`;
     });
+  }
+  state.chatHistory.push({ role:'ai', phase:'acting', text: '__ANNOTATION_PANEL__' });
+  // Instead, render inline
+  const chatMsgs = document.getElementById('chatMessages');
+  if (chatMsgs) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg ai';
+    div.innerHTML = `<div class="msg-bubble" style="max-width:100%;width:100%">${html}</div>`;
+    chatMsgs.appendChild(div);
+    chatMsgs.scrollTop = chatMsgs.scrollHeight;
+  }
+}
 
-    document.getElementById('btnBackToCategory').addEventListener('click', () => goToStep(1));
+function switchModule(m) {
+  state.activeModule = m;
+  // Remove last annotation panel message and re-show
+  state.chatHistory = state.chatHistory.filter(m => m.text !== '__ANNOTATION_PANEL__');
+  showAnnotationPanel();
+}
 
-    // ===== Panel 2: Fault Selection =====
-    const faultInput = document.getElementById('faultInput');
-    const faultTags = document.getElementById('faultTags');
-    const materialStatus = document.getElementById('materialStatus');
-    const btnStartGen = document.getElementById('btnStartGen');
+function setRcStatus(id, status) {
+  const rc = state.textbook.rootCauses.find(r => r.id === id);
+  if (rc) rc.status = status;
+  // Re-render annotation panel by removing last and re-showing
+  state.chatHistory = state.chatHistory.filter(m => m.text !== '__ANNOTATION_PANEL__');
+  showAnnotationPanel();
+  // Update hook status
+  if (status === 'deleted') {
+    state.hookResults.consistency = 'warn';
+  } else {
+    state.hookResults.quality = 'pass';
+  }
+}
 
-    function renderFaultTags() {
-      faultTags.innerHTML = '';
-      const faults = categoryFaults[state.selectedCategory] || [];
-      faults.forEach(f => {
-        const tag = document.createElement('div');
-        tag.className = 'tag-item fault-tag';
-        tag.dataset.fault = f.name;
-        tag.dataset.exists = f.exists;
-        tag.innerHTML = `<span class="dot ${f.exists ? 'dot-exists' : 'dot-new'}"></span> ${f.name}`;
-        faultTags.appendChild(tag);
-      });
-    }
+function setSegStatus(module, id, status) {
+  const item = state.textbook[module].find(r => r.id === id);
+  if (item) item.status = status;
+  state.chatHistory = state.chatHistory.filter(m => m.text !== '__ANNOTATION_PANEL__');
+  showAnnotationPanel();
+}
 
-    function selectFault(name, exists) {
-      state.selectedFault = name;
-      state.faultExists = exists;
-      document.querySelectorAll('.fault-tag').forEach(t => {
-        t.classList.toggle('selected', t.dataset.fault === name);
-      });
-      faultInput.value = name;
+function addRootCause() {
+  if (!state.newRcText.trim()) return;
+  state.textbook.rootCauses.push({
+    id: 'RC' + (state.textbook.rootCauses.length + 1),
+    text: state.newRcText.trim(),
+    status: 'new'
+  });
+  state.newRcText = '';
+  state.chatHistory = state.chatHistory.filter(m => m.text !== '__ANNOTATION_PANEL__');
+  showAnnotationPanel();
+}
 
-      materialStatus.classList.add('show');
-      materialStatus.classList.remove('exists-status', 'new-status');
+function continueNext() {
+  state.step = 1;
+  state.product = null;
+  state.fault = null;
+  state.chatHistory = [...CHAT_HISTORY];
+  state.gymStatus = 'idle';
+  state.gymScore = null;
+  state.hookResults = { quality:'idle', consistency:'idle', sync:'idle' };
+  state.textbook = JSON.parse(JSON.stringify(TEXTBOOK));
+  showToast('✅ 已发布，开始下一个故障', 'success');
+  render();
+}
 
-      if (exists) {
-        materialStatus.classList.add('exists-status');
-        const data = mockFaultData[name];
-        const rc = data ? data.rootCauses.length : '?';
-        const pr = data ? data.pruningRules.length : '?';
-        const rs = data ? data.repairSuggestions.length : '?';
-        const meta = data ? data.meta : {};
-        document.getElementById('statusIcon').textContent = '\u270E';
-        document.getElementById('statusTitle').textContent = '已有教材，进入修改模式';
-        document.getElementById('statusBody').innerHTML = `该故障现象已有对应的故障教材，您可以在此基线上进行修改和优化。<br>现有教材包含 <strong>${rc}</strong> 个根因、<strong>${pr}</strong> 条剪枝规则、<strong>${rs}</strong> 条维修建议。`;
-        document.getElementById('statusMeta').innerHTML = `
-          <span class="meta-item"><strong>作者：</strong>${meta.author || '-'}</span>
-          <span class="meta-item"><strong>版本：</strong>${meta.version || '-'}</span>
-          <span class="meta-item"><strong>最后更新：</strong>${meta.lastUpdate || '-'}</span>
-        `;
-      } else {
-        materialStatus.classList.add('new-status');
-        document.getElementById('statusIcon').textContent = '+';
-        document.getElementById('statusTitle').textContent = '尚未创建教材，将新增';
-        document.getElementById('statusBody').innerHTML = '该故障现象暂无对应教材，AI 将根据故障描述自动生成初版教材，然后您再进行专家标注。';
-        document.getElementById('statusMeta').innerHTML = `
-          <span class="meta-item"><strong>状态：</strong>待创建</span>
-          <span class="meta-item"><strong>创建方式：</strong>AI 自动生成</span>
-        `;
-      }
-      btnStartGen.disabled = false;
-    }
+// ============ REVISION PANEL ============
+function toggleRevisionPanel() {
+  const overlay = document.getElementById('revOverlay');
+  const panel = document.getElementById('revPanel');
+  const show = !panel.classList.contains('show');
+  overlay.classList.toggle('show', show);
+  panel.classList.toggle('show', show);
+  if (show) renderRevisionList();
+}
 
-    faultTags.addEventListener('click', (e) => {
-      const tag = e.target.closest('.fault-tag');
-      if (!tag) return;
-      selectFault(tag.dataset.fault, tag.dataset.exists === 'true');
-    });
+function renderRevisionList() {
+  const body = document.getElementById('revBody');
+  body.innerHTML = `
+    <div style="margin-bottom:12px;font-size:13px;color:var(--gray-500)">共 ${REVISION_TASKS.length} 条待处理修订任务</div>
+    ${REVISION_TASKS.map(t => `
+      <div class="rev-task ${t.priority}" onclick="openRevisionDialog('${t.id}')">
+        <span class="rev-type ${t.type}">${{root_cause:'根因冲突',path:'路径冲突',association:'关联冲突'}[t.type]}</span>
+        <div style="font-size:14px;font-weight:600;margin-top:4px">${t.fault}</div>
+        <div class="rev-source">来源: ${t.source}</div>
+        <div class="rev-suggestion">${t.desc}</div>
+        <div style="margin-top:4px;font-size:12px;color:var(--primary)">建议: ${t.suggestion}</div>
+      </div>
+    `).join('')}
+  `;
+}
 
-    faultInput.addEventListener('input', () => {
-      const val = faultInput.value.trim();
-      if (!val) {
-        materialStatus.classList.remove('show');
-        btnStartGen.disabled = true;
-        document.querySelectorAll('.fault-tag').forEach(t => t.classList.remove('selected'));
-        state.selectedFault = null;
-      }
-    });
-
-    faultInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const val = faultInput.value.trim();
-        if (val) selectFault(val, !!mockFaultData[val]);
-      }
-    });
-
-    // ===== Panel 3: AI Generation =====
-    btnStartGen.addEventListener('click', () => {
-      if (!state.selectedFault) return;
-      goToStep(3);
-      document.getElementById('genFaultName').textContent = state.selectedFault;
-      document.getElementById('aiGenerating').style.display = 'block';
-      document.getElementById('genResult').classList.remove('show');
-
-      let progress = 0;
-      const msgs = ['正在分析故障现象...', '提取根因列表...', '生成剪枝规则...', '生成维修建议...', '整合教材内容...', '生成完成！'];
-      const interval = setInterval(() => {
-        progress += Math.random() * 18 + 5;
-        if (progress >= 100) { progress = 100; clearInterval(interval); setTimeout(showGenResult, 400); }
-        document.getElementById('genProgressFill').style.width = progress + '%';
-        document.getElementById('genProgressText').textContent = msgs[Math.min(Math.floor(progress / 20), msgs.length - 1)];
-      }, 500);
-    });
-
-    function showGenResult() {
-      document.getElementById('aiGenerating').style.display = 'none';
-      document.getElementById('genResult').classList.add('show');
-      const data = mockFaultData[state.selectedFault] || generateMockData(state.selectedFault);
-      document.getElementById('genFaultNameResult').textContent = state.selectedFault;
-      document.getElementById('statRootCauses').textContent = data.rootCauses.length;
-      document.getElementById('statPruningRules').textContent = data.pruningRules.length;
-      document.getElementById('statRepairSuggestions').textContent = data.repairSuggestions.length;
-      document.getElementById('genPreview').textContent = `${state.selectedCategory} - ${state.selectedFault}：本教材从根因分析、诊断剪枝规则和维修建议三个维度进行系统性梳理...`;
-      state.rootCauses = JSON.parse(JSON.stringify(data.rootCauses));
-      state.pruningRules = JSON.parse(JSON.stringify(data.pruningRules));
-      state.repairSuggestions = JSON.parse(JSON.stringify(data.repairSuggestions));
-    }
-
-    function generateMockData(faultName) {
-      return {
-        rootCauses: [
-          { id: 1, title: `${faultName} - 根因1`, desc: 'AI自动生成', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 2, title: `${faultName} - 根因2`, desc: 'AI自动生成', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 3, title: `${faultName} - 根因3`, desc: 'AI自动生成', aiSuggestion: '建议保留', status: 'pending' },
-          { id: 4, title: `${faultName} - 根因4`, desc: '建议删除', aiSuggestion: '建议删除', status: 'pending' },
-        ],
-        pruningRules: [
-          { id: 1, title: '初步检查', text: `针对"${faultName}"进行初步检查步骤...`, status: 'pending' },
-          { id: 2, title: '深入诊断', text: `针对"${faultName}"进行深入诊断步骤...`, status: 'pending' },
-        ],
-        repairSuggestions: [
-          { id: 1, title: '维修方案1', text: `针对"${faultName}"的维修方案...`, status: 'pending' },
-          { id: 2, title: '维修方案2', text: `针对"${faultName}"的维修方案...`, status: 'pending' },
-        ],
-        meta: { author: 'AI', version: 'v1.0', lastUpdate: new Date().toISOString().split('T')[0] },
-      };
-    }
-
-    document.getElementById('btnBackToFault2').addEventListener('click', () => goToStep(2));
-
-    // ===== Panel 4: Annotation =====
-    document.getElementById('btnStartAnnotation').addEventListener('click', () => {
-      goToStep(4);
-      state.layer1Completed = false;
-      state.layer2Completed = false;
-      state.layer3Completed = false;
-      state.currentLayer = 1;
-      updateLayerTabs();
-      renderLayer1();
-      renderLayer2();
-      renderLayer3();
-    });
-
-    document.querySelectorAll('.layer-tab').forEach(tab => {
-      tab.addEventListener('click', () => switchLayer(parseInt(tab.dataset.layer)));
-    });
-
-    function switchLayer(layer) {
-      state.currentLayer = layer;
-      document.querySelectorAll('.layer-tab').forEach(t => {
-        t.classList.remove('active');
-        if (parseInt(t.dataset.layer) === layer) t.classList.add('active');
-      });
-      document.querySelectorAll('.layer-content').forEach(c => c.classList.remove('visible'));
-      document.getElementById(`layer${layer}`).classList.add('visible');
-    }
-
-    function updateLayerTabs() {
-      const tabs = document.querySelectorAll('.layer-tab');
-      tabs[0].className = `layer-tab ${state.layer1Completed ? 'completed-tab' : 'active'}`;
-      tabs[1].className = `layer-tab ${state.layer2Completed ? 'completed-tab' : ''}`;
-      tabs[2].className = `layer-tab ${state.layer3Completed ? 'completed-tab' : ''}`;
-      if (!state.layer1Completed) tabs[0].classList.add('active');
-      else if (!state.layer2Completed) tabs[1].classList.add('active');
-      else tabs[2].classList.add('active');
-      document.getElementById('layer1Badge').textContent = state.rootCauses.filter(c => c.status !== 'deleted').length;
-      document.getElementById('layer2Badge').textContent = state.pruningRules.length;
-      document.getElementById('layer3Badge').textContent = state.repairSuggestions.length;
-    }
-
-    // ===== Layer 1 =====
-    function renderLayer1() {
-      const list = document.getElementById('rootCauseList');
-      list.innerHTML = '';
-      state.rootCauses.forEach((cause, idx) => {
-        const card = document.createElement('div');
-        card.className = `cause-card ${cause.status === 'deleted' ? 'deleted' : ''} ${cause.status === 'modified' ? 'modified' : ''}`;
-        const badgeClass = cause.status === 'kept' ? 'badge-keep' : cause.status === 'deleted' ? 'badge-delete' : cause.status === 'modified' ? 'badge-modify' : cause.isNew ? 'badge-new' : '';
-        const badgeText = cause.status === 'kept' ? '保留' : cause.status === 'deleted' ? '已删除' : cause.status === 'modified' ? '已修改' : cause.isNew ? '新增' : '';
-        card.innerHTML = `
-          <div class="cause-top">
-            <div class="cause-checkbox"><input type="checkbox" class="cause-check" data-id="${cause.id}" ${cause.status === 'deleted' ? 'disabled' : ''} /></div>
-            <div class="cause-body">
-              <div class="cause-title">
-                <span class="cause-title-text">${idx + 1}. ${cause.title}</span>
-                ${badgeClass ? `<span class="cause-badge ${badgeClass}">${badgeText}</span>` : ''}
-              </div>
-              <div class="cause-desc">${cause.desc}${cause.aiSuggestion ? ` <span style="color:var(--accent-purple);font-size:11px">[AI: ${cause.aiSuggestion}]</span>` : ''}</div>
+function openRevisionDialog(id) {
+  const task = REVISION_TASKS.find(t => t.id === id);
+  if (!task) return;
+  const body = document.getElementById('revBody');
+  body.innerHTML = `
+    <div class="rev-dialog show" style="height:100%">
+      <div class="rev-dialog-header">
+        <button class="rev-back" onclick="renderRevisionList()">←</button>
+        <div>
+          <div style="font-weight:600">${task.fault}</div>
+          <div style="font-size:12px;color:var(--gray-500)">${task.desc}</div>
+        </div>
+      </div>
+      <div class="rev-dialog-body">
+        <div class="rev-task-nav">
+          ${REVISION_TASKS.map((t,i) => `
+            <div class="rev-nav-item ${t.id===id?'active':''} ${t.status!=='pending'?'done':''}">
+              <div class="rev-nav-dot" style="background:${{high:'var(--danger)',medium:'var(--warning)',low:'var(--gray-400)'}[t.priority]}"></div>
+              ${{root_cause:'根因',path:'路径',association:'关联'}[t.type]} #${i+1}
             </div>
-            <div class="cause-actions">
-              <div class="cause-action-btn btn-keep ${cause.status === 'kept' ? 'active-action' : ''}" data-id="${cause.id}" data-action="keep" title="保留">\u2713</div>
-              <div class="cause-action-btn btn-delete ${cause.status === 'deleted' ? 'active-action' : ''}" data-id="${cause.id}" data-action="delete" title="删除">\u2717</div>
-              <div class="cause-action-btn btn-edit ${cause.status === 'modified' ? 'active-action' : ''}" data-id="${cause.id}" data-action="edit" title="编辑">\u270E</div>
-            </div>
-          </div>`;
-        list.appendChild(card);
-      });
-      updateLayer1Stats();
-    }
-
-    function updateLayer1Stats() {
-      const kept = state.rootCauses.filter(c => c.status === 'kept').length;
-      const deleted = state.rootCauses.filter(c => c.status === 'deleted').length;
-      const modified = state.rootCauses.filter(c => c.status === 'modified').length;
-      const added = state.rootCauses.filter(c => c.isNew).length;
-      const pending = state.rootCauses.filter(c => c.status === 'pending' && !c.isNew).length;
-      document.getElementById('layer1Stats').innerHTML = `
-        <div class="stat-card"><div class="stat-icon green">\u2713</div><div class="stat-info"><div class="stat-value">${kept}</div><div class="stat-label">保留</div></div></div>
-        <div class="stat-card"><div class="stat-icon red">\u2717</div><div class="stat-info"><div class="stat-value">${deleted}</div><div class="stat-label">删除</div></div></div>
-        <div class="stat-card"><div class="stat-icon orange">\u270E</div><div class="stat-info"><div class="stat-value">${modified}</div><div class="stat-label">修改</div></div></div>
-        <div class="stat-card"><div class="stat-icon cyan">+</div><div class="stat-info"><div class="stat-value">${added}</div><div class="stat-label">新增</div></div></div>
-        <div class="stat-card"><div class="stat-icon muted">?</div><div class="stat-info"><div class="stat-value">${pending}</div><div class="stat-label">待处理</div></div></div>`;
-    }
-
-    document.getElementById('rootCauseList').addEventListener('click', (e) => {
-      const btn = e.target.closest('.cause-action-btn');
-      if (!btn) return;
-      const id = parseInt(btn.dataset.id);
-      const action = btn.dataset.action;
-      const cause = state.rootCauses.find(c => c.id === id);
-      if (!cause) return;
-      if (action === 'keep') { cause.status = cause.status === 'kept' ? 'pending' : 'kept'; showToast(`已标记保留`, 'success'); }
-      else if (action === 'delete') { cause.status = cause.status === 'deleted' ? 'pending' : 'deleted'; showToast(cause.status === 'deleted' ? '已删除' : '已恢复', cause.status === 'deleted' ? 'warning' : 'info'); }
-      else if (action === 'edit') { openEditModal(cause); return; }
-      renderLayer1(); updateLayerTabs();
-    });
-
-    document.getElementById('btnBatchKeep').addEventListener('click', () => {
-      const checked = document.querySelectorAll('.cause-check:checked');
-      if (!checked.length) { showToast('请先勾选要操作的根因', 'warning'); return; }
-      checked.forEach(cb => { const c = state.rootCauses.find(x => x.id === parseInt(cb.dataset.id)); if (c && c.status !== 'deleted') c.status = 'kept'; });
-      renderLayer1(); showToast(`已批量保留 ${checked.length} 个根因`, 'success');
-    });
-
-    document.getElementById('btnBatchDelete').addEventListener('click', () => {
-      const checked = document.querySelectorAll('.cause-check:checked');
-      if (!checked.length) { showToast('请先勾选要操作的根因', 'warning'); return; }
-      checked.forEach(cb => { const c = state.rootCauses.find(x => x.id === parseInt(cb.dataset.id)); if (c) c.status = 'deleted'; });
-      renderLayer1(); updateLayerTabs(); showToast(`已删除 ${checked.length} 个根因`, 'warning');
-    });
-
-    document.getElementById('btnAddCause').addEventListener('click', addNewCause);
-    document.getElementById('newCauseInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') addNewCause(); });
-
-    function addNewCause() {
-      const input = document.getElementById('newCauseInput');
-      const val = input.value.trim();
-      if (!val) return;
-      state.rootCauses.push({ id: Math.max(...state.rootCauses.map(c => c.id), 0) + 1, title: val, desc: '专家新增的根因', aiSuggestion: '', status: 'kept', isNew: true });
-      input.value = '';
-      renderLayer1(); updateLayerTabs(); showToast(`已添加新根因`, 'success');
-    }
-
-    // Edit Modal
-    let editingCause = null;
-
-    function openEditModal(cause) {
-      editingCause = cause;
-      document.getElementById('modalTitle').textContent = '编辑根因描述';
-      document.getElementById('modalLabel').textContent = '修改根因描述内容';
-      document.getElementById('modalTextarea').value = cause.title;
-      document.getElementById('editModal').classList.add('show');
-    }
-
-    document.getElementById('modalClose').addEventListener('click', () => document.getElementById('editModal').classList.remove('show'));
-    document.getElementById('modalCancel').addEventListener('click', () => document.getElementById('editModal').classList.remove('show'));
-    document.getElementById('modalConfirm').addEventListener('click', () => {
-      if (!editingCause) return;
-      const v = document.getElementById('modalTextarea').value.trim();
-      if (v && v !== editingCause.title) { editingCause.title = v; editingCause.status = 'modified'; renderLayer1(); showToast('根因描述已修改', 'success'); }
-      document.getElementById('editModal').classList.remove('show');
-    });
-    document.getElementById('editModal').addEventListener('click', (e) => { if (e.target === document.getElementById('editModal')) document.getElementById('editModal').classList.remove('show'); });
-
-    // ===== Layer 2 =====
-    function renderLayer2() {
-      const list = document.getElementById('pruningRuleList');
-      list.innerHTML = '';
-      state.pruningRules.forEach((rule, idx) => {
-        const badge = rule.status === 'approved' ? '<span class="cause-badge badge-keep">已通过</span>' : rule.status === 'modified' ? '<span class="cause-badge badge-modify">已修改</span>' : rule.status === 'rejected' ? '<span class="cause-badge badge-delete">已驳回</span>' : '';
-        const card = document.createElement('div');
-        card.className = 'segment-card';
-        card.innerHTML = `
-          <div class="segment-header">
-            <span class="segment-label"><span class="segment-num">${idx + 1}</span> ${rule.title} ${badge}</span>
-            <span style="font-size:11px;color:var(--text-muted)">${rule.status === 'pending' ? '待标注' : '已标注'}</span>
-          </div>
-          <div class="segment-body">
-            <div class="segment-text ${rule.status === 'modified' ? 'highlight' : ''}">${rule.text}</div>
-            <div class="segment-actions">
-              <button class="seg-action-btn approve ${rule.status === 'approved' ? 'active-seg' : ''}" data-id="${rule.id}" data-action="approve">\u2713 通过</button>
-              <button class="seg-action-btn modify ${rule.status === 'modified' ? 'active-seg' : ''}" data-id="${rule.id}" data-action="modify">\u270E 修改</button>
-              <button class="seg-action-btn reject ${rule.status === 'rejected' ? 'active-seg' : ''}" data-id="${rule.id}" data-action="reject">\u2717 驳回</button>
-            </div>
-            <div class="annotation-area ${rule.status === 'modified' ? 'show' : ''}" id="anno${rule.id}">
-              <div class="annotation-label">\u270E 专家批注/修改意见</div>
-              <textarea class="annotation-textarea" placeholder="请输入修改建议或批注内容..." data-rule-id="${rule.id}">${rule.annotation || ''}</textarea>
-            </div>
-          </div>`;
-        list.appendChild(card);
-      });
-      updateLayer2Stats();
-    }
-
-    function updateLayer2Stats() {
-      const a = state.pruningRules.filter(r => r.status === 'approved').length;
-      const m = state.pruningRules.filter(r => r.status === 'modified').length;
-      const rj = state.pruningRules.filter(r => r.status === 'rejected').length;
-      const p = state.pruningRules.filter(r => r.status === 'pending').length;
-      document.getElementById('layer2Stats').innerHTML = `
-        <div class="stat-card"><div class="stat-icon green">\u2713</div><div class="stat-info"><div class="stat-value">${a}</div><div class="stat-label">通过</div></div></div>
-        <div class="stat-card"><div class="stat-icon orange">\u270E</div><div class="stat-info"><div class="stat-value">${m}</div><div class="stat-label">修改</div></div></div>
-        <div class="stat-card"><div class="stat-icon red">\u2717</div><div class="stat-info"><div class="stat-value">${rj}</div><div class="stat-label">驳回</div></div></div>
-        <div class="stat-card"><div class="stat-icon muted">?</div><div class="stat-info"><div class="stat-value">${p}</div><div class="stat-label">待处理</div></div></div>`;
-    }
-
-    document.getElementById('pruningRuleList').addEventListener('click', (e) => {
-      const btn = e.target.closest('.seg-action-btn');
-      if (!btn) return;
-      const id = parseInt(btn.dataset.id);
-      const action = btn.dataset.action;
-      const rule = state.pruningRules.find(r => r.id === id);
-      if (!rule) return;
-      if (action === 'approve') { rule.status = rule.status === 'approved' ? 'pending' : 'approved'; showToast('已通过', 'success'); }
-      else if (action === 'modify') { rule.status = 'modified'; showToast('请输入修改意见', 'info'); }
-      else if (action === 'reject') { rule.status = rule.status === 'rejected' ? 'pending' : 'rejected'; showToast(rule.status === 'rejected' ? '已驳回' : '已恢复', 'warning'); }
-      renderLayer2();
-    });
-
-    document.getElementById('pruningRuleList').addEventListener('input', (e) => {
-      if (e.target.classList.contains('annotation-textarea')) {
-        const rule = state.pruningRules.find(r => r.id === parseInt(e.target.dataset.ruleId));
-        if (rule) rule.annotation = e.target.value;
-      }
-    });
-
-    // ===== Layer 3 =====
-    function renderLayer3() {
-      const list = document.getElementById('repairSuggestionList');
-      list.innerHTML = '';
-      state.repairSuggestions.forEach((sug, idx) => {
-        const badge = sug.status === 'approved' ? '<span class="cause-badge badge-keep">已通过</span>' : sug.status === 'modified' ? '<span class="cause-badge badge-modify">已修改</span>' : sug.status === 'rejected' ? '<span class="cause-badge badge-delete">已驳回</span>' : '';
-        const card = document.createElement('div');
-        card.className = 'segment-card';
-        card.innerHTML = `
-          <div class="segment-header">
-            <span class="segment-label"><span class="segment-num">${idx + 1}</span> ${sug.title} ${badge}</span>
-            <span style="font-size:11px;color:var(--text-muted)">${sug.status === 'pending' ? '待标注' : '已标注'}</span>
-          </div>
-          <div class="segment-body">
-            <div class="segment-text ${sug.status === 'modified' ? 'highlight' : ''}">${sug.text}</div>
-            <div class="segment-actions">
-              <button class="seg-action-btn approve ${sug.status === 'approved' ? 'active-seg' : ''}" data-id="${sug.id}" data-action="approve">\u2713 通过</button>
-              <button class="seg-action-btn modify ${sug.status === 'modified' ? 'active-seg' : ''}" data-id="${sug.id}" data-action="modify">\u270E 修改</button>
-              <button class="seg-action-btn reject ${sug.status === 'rejected' ? 'active-seg' : ''}" data-id="${sug.id}" data-action="reject">\u2717 驳回</button>
-            </div>
-            <div class="annotation-area ${sug.status === 'modified' ? 'show' : ''}" id="sugAnno${sug.id}">
-              <div class="annotation-label">\u270E 专家批注/修改意见</div>
-              <textarea class="annotation-textarea" placeholder="请输入修改建议或批注内容..." data-sug-id="${sug.id}">${sug.annotation || ''}</textarea>
-            </div>
-          </div>`;
-        list.appendChild(card);
-      });
-      updateLayer3Stats();
-    }
-
-    function updateLayer3Stats() {
-      const a = state.repairSuggestions.filter(s => s.status === 'approved').length;
-      const m = state.repairSuggestions.filter(s => s.status === 'modified').length;
-      const rj = state.repairSuggestions.filter(s => s.status === 'rejected').length;
-      const p = state.repairSuggestions.filter(s => s.status === 'pending').length;
-      document.getElementById('layer3Stats').innerHTML = `
-        <div class="stat-card"><div class="stat-icon green">\u2713</div><div class="stat-info"><div class="stat-value">${a}</div><div class="stat-label">通过</div></div></div>
-        <div class="stat-card"><div class="stat-icon orange">\u270E</div><div class="stat-info"><div class="stat-value">${m}</div><div class="stat-label">修改</div></div></div>
-        <div class="stat-card"><div class="stat-icon red">\u2717</div><div class="stat-info"><div class="stat-value">${rj}</div><div class="stat-label">驳回</div></div></div>
-        <div class="stat-card"><div class="stat-icon muted">?</div><div class="stat-info"><div class="stat-value">${p}</div><div class="stat-label">待处理</div></div></div>`;
-    }
-
-    document.getElementById('repairSuggestionList').addEventListener('click', (e) => {
-      const btn = e.target.closest('.seg-action-btn');
-      if (!btn) return;
-      const id = parseInt(btn.dataset.id);
-      const action = btn.dataset.action;
-      const sug = state.repairSuggestions.find(s => s.id === id);
-      if (!sug) return;
-      if (action === 'approve') { sug.status = sug.status === 'approved' ? 'pending' : 'approved'; showToast('已通过', 'success'); }
-      else if (action === 'modify') { sug.status = 'modified'; showToast('请输入修改意见', 'info'); }
-      else if (action === 'reject') { sug.status = sug.status === 'rejected' ? 'pending' : 'rejected'; showToast(sug.status === 'rejected' ? '已驳回' : '已恢复', 'warning'); }
-      renderLayer3();
-    });
-
-    document.getElementById('repairSuggestionList').addEventListener('input', (e) => {
-      if (e.target.classList.contains('annotation-textarea')) {
-        const sug = state.repairSuggestions.find(s => s.id === parseInt(e.target.dataset.sugId));
-        if (sug) sug.annotation = e.target.value;
-      }
-    });
-
-    // ===== Layer Navigation =====
-    document.getElementById('btnLayer1Back').addEventListener('click', () => goToStep(3));
-    document.getElementById('btnLayer1Next').addEventListener('click', () => {
-      const p = state.rootCauses.filter(c => c.status === 'pending' && !c.isNew).length;
-      if (p > 0) { showToast(`还有 ${p} 个根因未标注`, 'warning'); return; }
-      state.layer1Completed = true; switchLayer(2); updateLayerTabs(); showToast('根因列表标注完成', 'success');
-    });
-    document.getElementById('btnLayer2Back').addEventListener('click', () => switchLayer(1));
-    document.getElementById('btnLayer2Next').addEventListener('click', () => {
-      const p = state.pruningRules.filter(r => r.status === 'pending').length;
-      if (p > 0) { showToast(`还有 ${p} 条剪枝规则未标注`, 'warning'); return; }
-      state.layer2Completed = true; switchLayer(3); updateLayerTabs(); showToast('剪枝规则标注完成', 'success');
-    });
-    document.getElementById('btnLayer3Back').addEventListener('click', () => switchLayer(2));
-    document.getElementById('btnCompleteAnnotation').addEventListener('click', () => {
-      const p = state.repairSuggestions.filter(s => s.status === 'pending').length;
-      if (p > 0) { showToast(`还有 ${p} 条维修建议未标注`, 'warning'); return; }
-      state.layer3Completed = true;
-      state.completedFaults.push({ name: state.selectedFault, category: state.selectedCategory, timestamp: new Date().toLocaleString() });
-      showCompletePanel();
-    });
-
-    // ===== Complete =====
-    function showCompletePanel() {
-      goToStep(5);
-      document.getElementById('completeFaultName').textContent = state.selectedFault;
-      const kept = state.rootCauses.filter(c => c.status === 'kept').length;
-      const deleted = state.rootCauses.filter(c => c.status === 'deleted').length;
-      const modified = state.rootCauses.filter(c => c.status === 'modified').length;
-      const added = state.rootCauses.filter(c => c.isNew).length;
-      const rA = state.pruningRules.filter(r => r.status === 'approved').length;
-      const rM = state.pruningRules.filter(r => r.status === 'modified').length;
-      const sA = state.repairSuggestions.filter(s => s.status === 'approved').length;
-      const sM = state.repairSuggestions.filter(s => s.status === 'modified').length;
-
-      document.getElementById('completeSummary').innerHTML = `
-        <h4>标注统计</h4>
-        <div class="summary-row"><span class="label">产品大类</span><span class="value">${state.selectedCategory}</span></div>
-        <div class="summary-row"><span class="label">故障现象</span><span class="value">${state.selectedFault}</span></div>
-        <div class="summary-row"><span class="label">根因 - 保留</span><span class="value" style="color:var(--accent-green)">${kept}</span></div>
-        <div class="summary-row"><span class="label">根因 - 删除</span><span class="value" style="color:var(--accent-red)">${deleted}</span></div>
-        <div class="summary-row"><span class="label">根因 - 修改</span><span class="value" style="color:var(--accent-orange)">${modified}</span></div>
-        <div class="summary-row"><span class="label">根因 - 新增</span><span class="value" style="color:var(--accent-cyan)">${added}</span></div>
-        <div class="summary-row"><span class="label">剪枝规则 - 通过/修改</span><span class="value">${rA}/${rM}</span></div>
-        <div class="summary-row"><span class="label">维修建议 - 通过/修改</span><span class="value">${sA}/${sM}</span></div>`;
-
-      updateCompletedFaults();
-    }
-
-    function updateCompletedFaults() {
-      const container = document.getElementById('completedFaults');
-      const list = document.getElementById('completedFaultList');
-      if (!state.completedFaults.length) { container.style.display = 'none'; return; }
-      container.style.display = 'block';
-      list.innerHTML = '';
-      state.completedFaults.forEach(f => {
-        const item = document.createElement('div');
-        item.className = 'completed-fault-item';
-        item.innerHTML = `<span class="name"><span class="check-icon">\u2713</span> [${f.category}] ${f.name}</span><span style="color:var(--text-muted);font-size:12px">${f.timestamp}</span>`;
-        list.appendChild(item);
-      });
-    }
-
-    document.getElementById('btnNextFault').addEventListener('click', () => {
-      state.selectedFault = null; state.faultExists = false;
-      state.rootCauses = []; state.pruningRules = []; state.repairSuggestions = [];
-      state.layer1Completed = false; state.layer2Completed = false; state.layer3Completed = false; state.currentLayer = 1;
-      faultInput.value = ''; btnStartGen.disabled = true;
-      materialStatus.classList.remove('show');
-      document.querySelectorAll('.fault-tag').forEach(t => t.classList.remove('selected'));
-      goToStep(2); showToast('请选择下一个故障现象', 'info');
-    });
-
-    document.getElementById('btnViewDetail').addEventListener('click', () => {
-      goToStep(4); switchLayer(1); renderLayer1(); renderLayer2(); renderLayer3();
-    });
-
-    // ===== Revision Tasks & Dialogue Revision =====
-    const revisionTasks = [
-      { id: 'r1', type: 'root', typeLabel: '根因冲突', priority: 'high', faultName: '液压系统行走无力', title: '"液压主泵故障"标记为错误根因', evidence: '在3次智能体会话中，该根因均被排除，实际故障点在行走马达溢流阀。评测专家标注：该根因过于笼统，应修改为更具体的描述。', suggestion: { action: 'modify', target: '根因#5: 液压主泵故障', original: '液压主泵故障', suggested: '液压主泵功率控制阀磨损' }, status: 'pending' },
-      { id: 'r2', type: 'root', typeLabel: '根因冲突', priority: 'medium', faultName: '液压系统行走无力', title: '遗漏根因"行走制动阀未完全释放"', evidence: '会话案例中出现了冲洗阀导致的行走无力，但教材根因列表中没有这一条。评测专家补充：制动阀卡滞会导致持续制动，表现为行走无力。', suggestion: { action: 'add', target: '新增根因', original: '', suggested: '行走制动阀未完全释放（常见于8吨以上机型）' }, status: 'pending' },
-      { id: 'r3', type: 'path', typeLabel: '路径冲突', priority: 'high', faultName: '液压系统行走无力', title: '步骤3顺序错误：应先检查先导压力', evidence: '在未确认是单侧故障还是双侧故障时，直接拆解溢流阀效率低。评测专家标注：应先进行左右压力对比测试。', suggestion: { action: 'modify', target: '步骤3: 检查主泵压力', original: '步骤3: 检查主泵压力 → 通过→步骤4 / 失败→步骤5', suggested: '步骤3: 检查行走先导压力\n  ├─ 若正常 → 步骤4: 检查主泵压力\n  └─ 若不足 → 步骤4\': 排查先导油路' }, status: 'pending' },
-      { id: 'r4', type: 'root', typeLabel: '根因冲突', priority: 'low', faultName: '液压系统行走无力', title: '"液压油污染或变质"标记为非必要', evidence: '本次故障已确认为机械故障而非油液问题，概率极低。', suggestion: { action: 'delete', target: '根因#10: 液压油污染或变质', original: '液压油污染或变质', suggested: '' }, status: 'pending' },
-      { id: 'r5', type: 'path', typeLabel: '路径冲突', priority: 'medium', faultName: '液压系统行走无力', title: '步骤6冗余：检查液压油品质', evidence: '在已确认先导压力和溢流阀正常的情况下，检查油液品质是冗余步骤。', suggestion: { action: 'delete', target: '步骤6: 检查液压油品质', original: '步骤6: 检查液压油品质 → 化验分析', suggested: '删除此步骤，替换为：检查中央回转接头油封' }, status: 'pending' }
-    ];
-
-    let revisionMode = null; // 'quick' | 'dialogue'
-    let currentRevTaskIdx = 0;
-    let dialogueMessages = [];
-
-    function updateRevisionBadge() {
-      const count = revisionTasks.filter(t => t.status === 'pending').length;
-      document.getElementById('revisionBadge').textContent = count;
-      document.getElementById('revisionBadge').style.display = count > 0 ? 'flex' : 'none';
-    }
-
-    function showRevisionPanel() {
-      updateRevisionBadge();
-      const overlay = document.getElementById('revisionOverlay');
-      overlay.classList.add('show');
-      renderRevisionModeSelect();
-    }
-
-    function closeRevisionPanel() {
-      document.getElementById('revisionOverlay').classList.remove('show');
-    }
-
-    function renderRevisionModeSelect() {
-      const content = document.querySelector('.revision-content');
-      const taskList = document.querySelector('.revision-task-list');
-      taskList.innerHTML = '';
-      taskList.style.display = 'none';
-      const pendingCount = revisionTasks.filter(t => t.status === 'pending').length;
-      content.innerHTML = `
-        <div style="text-align:center;padding:40px 20px;">
-          <div style="font-size:40px;margin-bottom:12px;">📋</div>
-          <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;">修订任务</h3>
-          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">来自评测平台的反馈，共 <strong style="color:var(--accent-orange);">${pendingCount}</strong> 处冲突待处理</p>
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:24px;">请选择修订模式开始处理</p>
-          <div class="mode-selector" style="max-width:500px;margin:0 auto;">
-            <div class="mode-card ${revisionMode === 'quick' ? 'selected' : ''}" onclick="selectRevisionMode('quick')">
-              <div class="mode-card-icon">📋</div>
-              <div class="mode-card-title">快速审核</div>
-              <div class="mode-card-desc">逐条勾选确认<br>适合冲突少、修改明确的场景</div>
-            </div>
-            <div class="mode-card ${revisionMode === 'dialogue' ? 'selected' : ''}" onclick="selectRevisionMode('dialogue')">
-              <div class="mode-card-icon">💬</div>
-              <div class="mode-card-title">对话式修订</div>
-              <div class="mode-card-desc">AI引导式访谈<br>适合冲突多、需深入讨论的场景</div>
+          `).join('')}
+        </div>
+        <div class="rev-chat-area">
+          <div class="rev-chat-messages" style="padding:16px;overflow-y:auto;flex:1">
+            <div class="chat-msg ai">
+              <div><span class="react-tag reasoning">Reasoning</span></div>
+              <div class="msg-bubble">分析修订任务 ${id}...\n\n📋 修订类型：${{root_cause:'根因冲突',path:'路径冲突',association:'关联冲突'}[task.type]}\n📌 优先级：${{high:'高',medium:'中',low:'低'}[task.priority]}\n📎 来源：${task.source}\n\n📝 问题描述：${task.desc}\n💡 建议：${task.suggestion}\n\n您如何看待这个修订建议？</div>
             </div>
           </div>
-          <button class="rev-btn rev-btn-accept" style="margin-top:20px;padding:10px 32px;" onclick="startRevision()" ${!revisionMode ? 'disabled style="opacity:0.5;margin-top:20px;padding:10px 32px;"' : ''}>
-            开始修订
-          </button>
-        </div>`;
-    }
-
-    function selectRevisionMode(mode) {
-      revisionMode = mode;
-      renderRevisionModeSelect();
-    }
-
-    function startRevision() {
-      if (!revisionMode) return;
-      currentRevTaskIdx = revisionTasks.findIndex(t => t.status === 'pending');
-      if (currentRevTaskIdx < 0) { showToast('所有修订任务已处理', 'success'); return; }
-      if (revisionMode === 'quick') renderQuickReview();
-      else renderDialogueRevision();
-    }
-
-    function renderTaskList() {
-      const taskList = document.querySelector('.revision-task-list');
-      taskList.style.display = 'block';
-      taskList.innerHTML = revisionTasks.map((t, i) => `
-        <div class="revision-task-item ${i === currentRevTaskIdx ? 'active' : ''} ${t.status !== 'pending' ? 'done' : ''}" onclick="jumpToTask(${i})">
-          <span class="rti-type ${t.type}">${t.typeLabel}</span>
-          <div class="rti-title">${t.title}</div>
-          <div class="rti-status">${t.status === 'pending' ? '⏳ 待处理' : t.status === 'accepted' ? '✅ 已接受' : t.status === 'rejected' ? '❌ 已拒绝' : '📝 已修改'}</div>
-        </div>`).join('') + `
-        <div class="revision-task-summary">
-          已确认: ${revisionTasks.filter(t => t.status !== 'pending').length} / ${revisionTasks.length}
-        </div>`;
-    }
-
-    function jumpToTask(idx) {
-      currentRevTaskIdx = idx;
-      if (revisionMode === 'quick') renderQuickReview();
-      else renderDialogueRevision();
-    }
-
-    // ===== Quick Review Mode =====
-    function renderQuickReview() {
-      renderTaskList();
-      const content = document.querySelector('.revision-content');
-      const task = revisionTasks[currentRevTaskIdx];
-      if (!task || task.status !== 'pending') {
-        const next = revisionTasks.findIndex(t => t.status === 'pending');
-        if (next < 0) { renderRevisionComplete(); return; }
-        currentRevTaskIdx = next;
-      }
-      const t = revisionTasks[currentRevTaskIdx];
-      const actionLabel = t.suggestion.action === 'delete' ? '删除' : t.suggestion.action === 'add' ? '新增' : '修改';
-      const actionColor = t.suggestion.action === 'delete' ? 'var(--accent-red)' : t.suggestion.action === 'add' ? 'var(--accent-green)' : 'var(--accent-blue)';
-      content.innerHTML = `
-        <div class="rev-section">
-          <div class="rev-section-title"><span class="rti-type ${t.type}">${t.typeLabel}</span> ${t.faultName} <span style="font-size:11px;color:var(--text-muted);">(${currentRevTaskIdx + 1}/${revisionTasks.length})</span></div>
-        </div>
-        <div class="rev-section">
-          <div class="rev-section-title">📎 评测证据</div>
-          <div class="rev-evidence">${t.evidence}</div>
-        </div>
-        <div class="rev-section">
-          <div class="rev-section-title">💡 修订建议</div>
-          <div class="rev-suggestion">
-            <div class="rev-suggestion-row"><span class="rev-suggestion-label">操作:</span><span class="rev-suggestion-value" style="color:${actionColor};font-weight:600;">${actionLabel}</span></div>
-            <div class="rev-suggestion-row"><span class="rev-suggestion-label">对象:</span><span class="rev-suggestion-value">${t.suggestion.target}</span></div>
-            ${t.suggestion.original ? `<div class="rev-suggestion-row"><span class="rev-suggestion-label">原文:</span><span class="rev-suggestion-value del">${t.suggestion.original}</span></div>` : ''}
-            ${t.suggestion.suggested ? `<div class="rev-suggestion-row"><span class="rev-suggestion-label">改为:</span><span class="rev-suggestion-value add">${t.suggestion.suggested.replace(/\n/g, '<br>')}</span></div>` : ''}
+          <div class="rev-chat-input">
+            <input class="chat-input" placeholder="回复修订意见..." style="flex:1">
+            <button class="send-btn" style="padding:8px 16px" onclick="sendRevisionChat()">发送</button>
           </div>
         </div>
-        <div class="rev-actions">
-          <button class="rev-btn rev-btn-accept" onclick="acceptRevision('${t.id}')">✓ 接受</button>
-          <button class="rev-btn rev-btn-modify" onclick="modifyRevision('${t.id}')">✎ 修改后接受</button>
-          <button class="rev-btn rev-btn-reject" onclick="rejectRevision('${t.id}')">✗ 拒绝</button>
-        </div>`;
-    }
+      </div>
+    </div>
+  `;
+}
 
-    function acceptRevision(id) {
-      const task = revisionTasks.find(t => t.id === id);
-      if (task) task.status = 'accepted';
-      showToast('已接受修订建议', 'success');
-      advanceToNextTask();
-    }
+function sendRevisionChat() {
+  showToast('💬 对话式修订功能已触发', 'success');
+}
 
-    function rejectRevision(id) {
-      const task = revisionTasks.find(t => t.id === id);
-      if (task) task.status = 'rejected';
-      showToast('已拒绝修订建议', 'warning');
-      advanceToNextTask();
-    }
+// ============ TOAST ============
+function showToast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
 
-    function modifyRevision(id) {
-      const task = revisionTasks.find(t => t.id === id);
-      if (!task) return;
-      const newContent = prompt('请输入修改后的内容：', task.suggestion.suggested);
-      if (newContent !== null && newContent.trim()) {
-        task.suggestion.suggested = newContent.trim();
-        task.status = 'modified';
-        showToast('已修改并接受', 'success');
-        advanceToNextTask();
-      }
-    }
-
-    function advanceToNextTask() {
-      updateRevisionBadge();
-      renderTaskList();
-      const next = revisionTasks.findIndex(t => t.status === 'pending');
-      if (next < 0) { renderRevisionComplete(); return; }
-      currentRevTaskIdx = next;
-      if (revisionMode === 'quick') renderQuickReview();
-      else renderDialogueRevision();
-    }
-
-    function renderRevisionComplete() {
-      const content = document.querySelector('.revision-content');
-      const taskList = document.querySelector('.revision-task-list');
-      taskList.innerHTML = '';
-      const accepted = revisionTasks.filter(t => t.status === 'accepted' || t.status === 'modified').length;
-      const rejected = revisionTasks.filter(t => t.status === 'rejected').length;
-      content.innerHTML = `
-        <div style="text-align:center;padding:40px 20px;">
-          <div style="font-size:48px;margin-bottom:12px;">✅</div>
-          <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;">修订审核完成</h3>
-          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;">共处理 ${revisionTasks.length} 条修订任务</p>
-          <div style="display:flex;gap:16px;justify-content:center;margin-bottom:24px;">
-            <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:var(--accent-green);">${accepted}</div><div style="font-size:12px;color:var(--text-muted);">已接受</div></div>
-            <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:var(--accent-red);">${rejected}</div><div style="font-size:12px;color:var(--text-muted);">已拒绝</div></div>
-          </div>
-          <p style="font-size:12px;color:var(--accent-orange);margin-bottom:16px;">接受的修订将合并到教材中，教材版本号将更新</p>
-          <button class="rev-btn rev-btn-accept" style="padding:10px 24px;" onclick="mergeRevisions()">确认合并到教材</button>
-        </div>`;
-    }
-
-    function mergeRevisions() {
-      showToast('修订已合并到教材，版本号已更新', 'success');
-      closeRevisionPanel();
-    }
-
-    // ===== Dialogue Revision Mode =====
-    function renderDialogueRevision() {
-      renderTaskList();
-      const content = document.querySelector('.revision-content');
-      content.innerHTML = '';
-      content.style.padding = '0';
-
-      const dlgArea = document.createElement('div');
-      dlgArea.className = 'dialogue-area';
-      dlgArea.innerHTML = `
-        <div class="dialogue-messages" id="dlgMessages"></div>
-        <div class="dialogue-shortcuts">
-          <button class="dlg-shortcut-btn" onclick="dlgShortcut('回退上条')">↩ 回退上条</button>
-          <button class="dlg-shortcut-btn" onclick="dlgShortcut('查看原教材')">📖 查看原教材</button>
-          <button class="dlg-shortcut-btn" onclick="dlgShortcut('查看完整报告')">📄 查看完整报告</button>
-          <button class="dlg-shortcut-btn" onclick="dlgShortcut('跳过此条')">⏭ 跳过此条</button>
-        </div>
-        <div class="dialogue-input-area">
-          <input class="dialogue-input" id="dlgInput" placeholder="输入您的意见..." onkeydown="if(event.key==='Enter')sendDlgMsg()">
-          <button class="dialogue-send" onclick="sendDlgMsg()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
-        </div>`;
-      content.appendChild(dlgArea);
-
-      dialogueMessages = [];
-      startDialogueForTask(currentRevTaskIdx);
-    }
-
-    function startDialogueForTask(idx) {
-      const task = revisionTasks[idx];
-      if (!task || task.status !== 'pending') {
-        const next = revisionTasks.findIndex(t => t.status === 'pending');
-        if (next < 0) { renderRevisionComplete(); return; }
-        currentRevTaskIdx = next;
-        startDialogueForTask(currentRevTaskIdx);
-        return;
-      }
-
-      const actionLabel = task.suggestion.action === 'delete' ? '删除' : task.suggestion.action === 'add' ? '新增' : '修改';
-      addDlgMsg('ai', `我们从评测反馈开始。<strong>${task.faultName}</strong>的教材中，评测发现${task.typeLabel}，先看这一条——`, false);
-      addDlgMsg('ai', `
-        <div class="dlg-evidence-block">
-          <strong>📋 评测标注：</strong>${task.title}<br>
-          <strong>📎 证据：</strong>${task.evidence}
-        </div>
-        <div class="dlg-suggestion-block">
-          <strong>💡 建议操作：</strong>${actionLabel}<br>
-          ${task.suggestion.original ? `<strong>原文：</strong>${task.suggestion.original}<br>` : ''}
-          ${task.suggestion.suggested ? `<strong>建议改为：</strong>${task.suggestion.suggested.replace(/\n/g, '<br>')}` : ''}
-        </div>
-        <div style="margin-top:8px;">您怎么看？${task.suggestion.action === 'delete' ? '是否确认删除？' : task.suggestion.action === 'add' ? '是否需要补充到教材中？' : '这个修改建议是否合理？'}</div>
-        <div class="dlg-inline-actions">
-          <button class="dlg-inline-btn dlg-confirm-btn" onclick="dlgConfirm()">确认</button>
-          <button class="dlg-inline-btn dlg-adjust-btn" onclick="dlgAdjust()">需要调整</button>
-          <button class="dlg-inline-btn dlg-reject-btn" onclick="dlgReject()">不同意</button>
-        </div>`, false);
-    }
-
-    function addDlgMsg(role, content, scroll = true) {
-      dialogueMessages.push({ role, content });
-      const container = document.getElementById('dlgMessages');
-      if (!container) return;
-      const msg = document.createElement('div');
-      msg.className = `dlg-msg ${role}`;
-      msg.innerHTML = `
-        <div class="dlg-avatar ${role === 'ai' ? 'ai-avatar' : 'user-avatar'}">${role === 'ai' ? 'AI' : '专'}</div>
-        <div class="dlg-bubble">${content}</div>`;
-      container.appendChild(msg);
-      if (scroll) container.scrollTop = container.scrollHeight;
-    }
-
-    function sendDlgMsg() {
-      const input = document.getElementById('dlgInput');
-      if (!input) return;
-      const text = input.value.trim();
-      if (!text) return;
-      addDlgMsg('user', text);
-      input.value = '';
-
-      // AI responds by parsing intent
-      const task = revisionTasks[currentRevTaskIdx];
-      if (!task) return;
-
-      const lower = text.toLowerCase();
-      if (lower.includes('确认') || lower.includes('同意') || lower.includes('可以') || lower.includes('没问题')) {
-        handleDlgAccept(task);
-      } else if (lower.includes('拒绝') || lower.includes('不同意') || lower.includes('不需要') || lower.includes('删除')) {
-        handleDlgReject(task);
-      } else if (lower.includes('修改') || lower.includes('调整') || lower.includes('改成') || lower.includes('换成') || lower.includes('应该是')) {
-        handleDlgModify(task, text);
-      } else {
-        // General response - ask for clarification
-        addDlgMsg('ai', `收到您的意见："${text}"。请问您对这条修订建议的最终决定是？<div class="dlg-inline-actions"><button class="dlg-inline-btn dlg-confirm-btn" onclick="dlgConfirm()">确认接受</button><button class="dlg-inline-btn dlg-adjust-btn" onclick="dlgAdjust()">需要调整</button><button class="dlg-inline-btn dlg-reject-btn" onclick="dlgReject()">拒绝</button></div>`);
-      }
-    }
-
-    function dlgConfirm() {
-      const task = revisionTasks[currentRevTaskIdx];
-      addDlgMsg('user', '确认');
-      handleDlgAccept(task);
-    }
-
-    function dlgAdjust() {
-      const task = revisionTasks[currentRevTaskIdx];
-      addDlgMsg('user', '需要调整');
-      addDlgMsg('ai', `好的，请告诉我您希望如何调整这条修订建议？您可以直接输入修改后的内容。`);
-    }
-
-    function dlgReject() {
-      const task = revisionTasks[currentRevTaskIdx];
-      addDlgMsg('user', '不同意');
-      handleDlgReject(task);
-    }
-
-    function handleDlgAccept(task) {
-      task.status = 'accepted';
-      updateRevisionBadge();
-      renderTaskList();
-      const actionLabel = task.suggestion.action === 'delete' ? '删除' : task.suggestion.action === 'add' ? '新增' : '修改';
-      addDlgMsg('ai', `✅ 已记录。${actionLabel}操作已确认：${task.suggestion.suggested ? task.suggestion.suggested.replace(/\n/g, '<br>') : task.suggestion.target}`);
-      advanceDialogueToNext();
-    }
-
-    function handleDlgReject(task) {
-      task.status = 'rejected';
-      updateRevisionBadge();
-      renderTaskList();
-      addDlgMsg('ai', `✅ 已记录。该修订建议已拒绝。`);
-      advanceDialogueToNext();
-    }
-
-    function handleDlgModify(task, text) {
-      // Extract modification from user's text
-      const match = text.match(/(?:改成|换成|应该是|修改为|改为)[:：]?\s*(.+)/);
-      const newContent = match ? match[1] : text;
-      task.suggestion.suggested = newContent;
-      task.status = 'modified';
-      updateRevisionBadge();
-      renderTaskList();
-      addDlgMsg('ai', `明白，我将修订建议调整为：<br><div class="dlg-suggestion-block"><strong>修改后内容：</strong>${newContent}</div>已记录此调整。`);
-      advanceDialogueToNext();
-    }
-
-    function advanceDialogueToNext() {
-      const next = revisionTasks.findIndex(t => t.status === 'pending');
-      if (next < 0) {
-        addDlgMsg('ai', `<br>🎉 所有修订任务已审核完毕！<div class="dlg-inline-actions"><button class="dlg-inline-btn dlg-confirm-btn" onclick="renderRevisionComplete()">查看汇总</button></div>`);
-        return;
-      }
-      currentRevTaskIdx = next;
-      setTimeout(() => startDialogueForTask(currentRevTaskIdx), 800);
-    }
-
-    function dlgShortcut(action) {
-      if (action === '回退上条') {
-        // Undo last task decision
-        for (let i = revisionTasks.length - 1; i >= 0; i--) {
-          if (revisionTasks[i].status !== 'pending') {
-            revisionTasks[i].status = 'pending';
-            currentRevTaskIdx = i;
-            updateRevisionBadge();
-            showToast('已回退上一条修订', 'info');
-            if (revisionMode === 'dialogue') {
-              addDlgMsg('user', '回退上条');
-              addDlgMsg('ai', '好的，已回退。让我们重新看这条——');
-              startDialogueForTask(i);
-            } else {
-              renderQuickReview();
-            }
-            return;
-          }
-        }
-        showToast('没有可回退的修订', 'warning');
-      } else if (action === '跳过此条') {
-        advanceDialogueToNext();
-      } else if (action === '查看原教材') {
-        showToast('查看原教材功能（待接入后端）', 'info');
-      } else if (action === '查看完整报告') {
-        showToast('查看完整报告功能（待接入后端）', 'info');
-      }
-    }
-
-    // Init revision badge
-    updateRevisionBadge();
-  </script>
+// ============ INIT ============
+render();
+</script>
 </body>
 </html>
