@@ -116,15 +116,65 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .chat-input-hint{font-size:11px;color:var(--text3);margin-top:6px;display:flex;align-items:center;gap:12px}
 .chat-input-hint kbd{background:#f1f5f9;padding:1px 5px;border-radius:3px;font-size:10px;border:1px solid var(--border)}
 
-/* ===== Right Panel: File Preview + Annotations ===== */
+/* ===== Right Panel: File Drive + Preview + Annotations ===== */
 .file-panel{width:0;overflow:hidden;transition:width .3s ease;display:flex;flex-direction:column;background:var(--card);position:relative}
 .file-panel.open{width:520px}
 .file-panel-header{height:48px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--border);gap:8px;flex-shrink:0}
 .file-panel-header .panel-title{flex:1;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .file-panel-header .close-btn{width:28px;height:28px;border:none;background:transparent;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all .15s}
 .file-panel-header .close-btn:hover{background:#f1f5f9;color:var(--text)}
+.file-panel-header .back-btn{width:28px;height:28px;border:none;background:transparent;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all .15s;display:none}
+.file-panel-header .back-btn:hover{background:#f1f5f9;color:var(--text)}
+.file-panel-header .back-btn.visible{display:flex}
 
-.file-content{flex:1;overflow-y:auto;padding:20px;font-size:13px;line-height:1.8}
+/* File Drive List */
+.file-drive{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.file-drive-header{padding:16px 20px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.file-drive-header h3{font-size:14px;font-weight:600;flex:1}
+.file-drive-header .drive-badge{background:#f1f5f9;color:var(--text2);font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500}
+.file-drive-list{flex:1;overflow-y:auto;padding:0 12px 12px}
+.file-drive-list::-webkit-scrollbar{width:4px}
+.file-drive-list::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
+
+.drive-section{margin-bottom:16px}
+.drive-section-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;padding:0 8px;margin-bottom:6px;font-weight:500}
+
+.file-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .12s;margin-bottom:2px;border:1px solid transparent}
+.file-item:hover{background:#f8fafc;border-color:var(--border)}
+.file-item.active{background:var(--primary-light);border-color:var(--primary)}
+.file-item .file-icon-wrap{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.file-item .file-icon-wrap.generating{background:linear-gradient(135deg,#fef3c7,#fde68a)}
+.file-item .file-icon-wrap.completed{background:var(--primary-light)}
+.file-item .file-icon-wrap.error{background:var(--danger-light)}
+.file-item .file-icon-wrap svg{width:18px;height:18px}
+.file-item .file-icon-wrap.generating svg{color:#d97706}
+.file-item .file-icon-wrap.completed svg{color:var(--primary)}
+.file-item .file-icon-wrap.error svg{color:var(--danger)}
+.file-item .file-icon-wrap .gen-spinner{position:absolute;inset:-2px;border:2px solid transparent;border-top-color:#d97706;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.file-item .file-detail{flex:1;min-width:0}
+.file-item .file-name-row{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.file-item .file-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-item .file-version{font-size:10px;padding:1px 5px;border-radius:3px;background:#f1f5f9;color:var(--text3);flex-shrink:0}
+.file-item .file-meta-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3)}
+.file-item .file-status{display:inline-flex;align-items:center;gap:4px;font-weight:500}
+.file-item .file-status.generating{color:#d97706}
+.file-item .file-status.completed{color:var(--success)}
+.file-item .file-status.error{color:var(--danger)}
+.file-item .file-status .status-dot{width:6px;height:6px;border-radius:50%}
+.file-item .file-status.generating .status-dot{background:#d97706;animation:pulse 1.5s infinite}
+.file-item .file-status.completed .status-dot{background:var(--success)}
+.file-item .file-status.error .status-dot{background:var(--danger)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.file-progress{height:3px;background:#f1f5f9;border-radius:2px;margin-top:6px;overflow:hidden}
+.file-progress .bar{height:100%;border-radius:2px;transition:width .5s ease;background:linear-gradient(90deg,var(--primary),#60a5fa)}
+.file-progress .bar.indeterminate{width:40%;animation:indeterminate 1.5s infinite ease-in-out}
+@keyframes indeterminate{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+
+/* File Preview Content (shown when a file is selected) */
+.file-content{flex:1;overflow-y:auto;padding:20px;font-size:13px;line-height:1.8;display:none}
+.file-content.visible{display:block}
 .file-content::-webkit-scrollbar{width:4px}
 .file-content::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
 
@@ -386,23 +436,111 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
       </div>
     </div>
 
-    <!-- File Preview Panel -->
+    <!-- File Drive Panel -->
     <div class="file-panel" id="filePanel">
       <div class="file-panel-header">
-        <div class="panel-title">故障诊断教材：挖掘机行走无力 v1.0</div>
+        <button class="back-btn" id="backBtn" onclick="showFileDrive()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="10,3 5,8 10,13"/></svg>
+        </button>
+        <div class="panel-title" id="panelTitle">会话文件</div>
         <button class="close-btn" onclick="toggleFilePanel(false)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
         </button>
       </div>
+
+      <!-- File Drive List View -->
+      <div class="file-drive" id="fileDrive">
+        <div class="file-drive-header">
+          <h3>会话文件</h3>
+          <span class="drive-badge" id="driveBadge">4 个文件</span>
+        </div>
+        <div class="file-drive-list" id="driveList">
+          <!-- Generating section -->
+          <div class="drive-section">
+            <div class="drive-section-title">生成中</div>
+            <div class="file-item" data-file="engine-start" onclick="openFile('engine-start')">
+              <div class="file-icon-wrap generating">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="9" y2="11"/></svg>
+                <div class="gen-spinner"></div>
+              </div>
+              <div class="file-detail">
+                <div class="file-name-row">
+                  <span class="file-name">故障诊断教材：发动机无法启动</span>
+                  <span class="file-version">v1.0</span>
+                </div>
+                <div class="file-meta-row">
+                  <span class="file-status generating"><span class="status-dot"></span>生成中 65%</span>
+                  <span>刚刚</span>
+                </div>
+                <div class="file-progress"><div class="bar" style="width:65%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Completed section -->
+          <div class="drive-section">
+            <div class="drive-section-title">已完成</div>
+            <div class="file-item active" data-file="walk-weak" onclick="openFile('walk-weak')">
+              <div class="file-icon-wrap completed">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="9" y2="11"/></svg>
+              </div>
+              <div class="file-detail">
+                <div class="file-name-row">
+                  <span class="file-name">故障诊断教材：挖掘机行走无力</span>
+                  <span class="file-version">v1.1</span>
+                </div>
+                <div class="file-meta-row">
+                  <span class="file-status completed"><span class="status-dot"></span>已完成</span>
+                  <span>20:30 更新</span>
+                  <span style="color:var(--primary)">3处修改</span>
+                </div>
+              </div>
+            </div>
+            <div class="file-item" data-file="hydraulic-noise" onclick="openFile('hydraulic-noise')">
+              <div class="file-icon-wrap completed">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="9" y2="11"/></svg>
+              </div>
+              <div class="file-detail">
+                <div class="file-name-row">
+                  <span class="file-name">故障诊断教材：液压系统异响</span>
+                  <span class="file-version">v2.0</span>
+                </div>
+                <div class="file-meta-row">
+                  <span class="file-status completed"><span class="status-dot"></span>已完成</span>
+                  <span>昨天 15:20</span>
+                  <span style="color:var(--success)">已定稿</span>
+                </div>
+              </div>
+            </div>
+            <div class="file-item" data-file="pump-arm" onclick="openFile('pump-arm')">
+              <div class="file-icon-wrap completed">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="9" y2="11"/></svg>
+              </div>
+              <div class="file-detail">
+                <div class="file-name-row">
+                  <span class="file-name">剪枝规则库：泵车臂架抖动</span>
+                  <span class="file-version">v1.0</span>
+                </div>
+                <div class="file-meta-row">
+                  <span class="file-status completed"><span class="status-dot"></span>已完成</span>
+                  <span>3天前</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Preview (shown when a file is opened) -->
       <div class="file-content" id="fileContent">
         <div class="doc-meta">
           <h2>故障诊断教材：挖掘机行走无力</h2>
           <div class="doc-meta-row">
-            <span class="doc-meta-tag version">v1.0</span>
+            <span class="doc-meta-tag version">v1.1</span>
             <span class="doc-meta-tag scope">三一全系列柴油挖掘机</span>
           </div>
           <div class="doc-meta-row" style="margin-top:6px">
-            <span>生成时间：2026-05-03</span>
+            <span>更新时间：2026-05-03 20:30</span>
             <span>参考案例：10份</span>
             <span>参考手册：30份</span>
           </div>
@@ -440,31 +578,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
               <span class="item-num">6)</span>
               <span class="item-text" data-section="rootcause" data-id="rc6">主溢流阀设定压力偏低或故障</span>
             </div>
-            <div class="doc-item" data-idx="7">
+            <div class="doc-item" data-idx="7" style="text-decoration:line-through;opacity:0.5">
               <span class="item-num">7)</span>
               <span class="item-text" data-section="rootcause" data-id="rc7">液压主泵故障（功率控制阀磨损、配流盘磨损）</span>
+              <span style="font-size:11px;color:var(--danger);margin-left:6px">已删除</span>
             </div>
             <div class="doc-item" data-idx="8">
-              <span class="item-num">8)</span>
+              <span class="item-num">7)</span>
               <span class="item-text" data-section="rootcause" data-id="rc8">中央回转接头油封损坏导致行走系统泄压</span>
             </div>
             <div class="doc-item" data-idx="9">
-              <span class="item-num">9)</span>
+              <span class="item-num">8)</span>
               <span class="item-text" data-section="rootcause" data-id="rc9">行走比例电磁阀故障</span>
             </div>
             <div class="doc-item" data-idx="10">
-              <span class="item-num">10)</span>
+              <span class="item-num">9)</span>
               <span class="item-text" data-section="rootcause" data-id="rc10">液压油污染或变质</span>
             </div>
           </div>
           <div class="doc-subsection">
             <div class="doc-subsection-title">1.3 机械系统</div>
             <div class="doc-item" data-idx="11">
-              <span class="item-num">11)</span>
+              <span class="item-num">10)</span>
               <span class="item-text" data-section="rootcause" data-id="rc11">终传动减速机构磨损或损坏</span>
             </div>
             <div class="doc-item" data-idx="12">
-              <span class="item-num">12)</span>
+              <span class="item-num">11)</span>
               <span class="item-text" data-section="rootcause" data-id="rc12">行走制动器未完全释放</span>
             </div>
           </div>
@@ -478,9 +617,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
             <div class="doc-item" data-idx="13">
               <span class="item-text" data-section="pruning" data-id="pr1">若整车均有无力感且发动机转速正常 → 排除液压系统故障，重点检查发动机输出功率和主泵吸收功率是否匹配</span>
             </div>
-            <div class="doc-item" data-idx="14">
-              <span class="item-text" data-section="pruning" data-id="pr2">- ❌可跳过：燃油系统、进气系统、机械系统检查
-- ✅优先检查：蓄电池电压、启动继电器、启动线路</span>
+            <div class="doc-item" data-idx="14" style="background:#fffbeb;border-left:3px solid var(--warn);padding-left:8px;border-radius:0 4px 4px 0">
+              <span class="item-text" data-section="pruning" data-id="pr2">- ❌可跳过：进气系统
+- ✅优先检查：燃油系统、机械系统、蓄电池电压、启动继电器、启动线路</span>
+              <span style="font-size:11px;color:var(--warn);margin-left:6px">已修改</span>
             </div>
           </div>
           <div class="doc-subsection">
@@ -519,20 +659,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
             <span class="item-num">步骤4</span>
             <span class="item-text" data-section="steps" data-id="st4">检查液压油温度和粘度</span>
           </div>
-          <div class="doc-item" data-idx="22">
+          <div class="doc-item" data-idx="22" style="background:#f0fdf4;border-left:3px solid var(--success);padding-left:8px;border-radius:0 4px 4px 0">
             <span class="item-num">步骤5</span>
-            <span class="item-text" data-section="steps" data-id="st5">检测主泵输出压力和先导压力</span>
+            <span class="item-text" data-section="steps" data-id="st4b">检查液压油滤芯是否堵塞，若堵塞则更换滤芯并清洗油路</span>
+            <span style="font-size:11px;color:var(--success);margin-left:6px">新增</span>
           </div>
           <div class="doc-item" data-idx="23">
             <span class="item-num">步骤6</span>
-            <span class="item-text" data-section="steps" data-id="st6">检查行走马达溢流阀设定压力</span>
+            <span class="item-text" data-section="steps" data-id="st5">检测主泵输出压力和先导压力</span>
           </div>
           <div class="doc-item" data-idx="24">
             <span class="item-num">步骤7</span>
-            <span class="item-text" data-section="steps" data-id="st7">检查中央回转接头油封是否损坏</span>
+            <span class="item-text" data-section="steps" data-id="st6">检查行走马达溢流阀设定压力</span>
           </div>
           <div class="doc-item" data-idx="25">
             <span class="item-num">步骤8</span>
+            <span class="item-text" data-section="steps" data-id="st7">检查中央回转接头油封是否损坏</span>
+          </div>
+          <div class="doc-item" data-idx="26">
+            <span class="item-num">步骤9</span>
             <span class="item-text" data-section="steps" data-id="st8">检查终传动减速机构磨损情况</span>
           </div>
         </div>
@@ -573,6 +718,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 // ===== State =====
 let annotations = [];
 let annoIdCounter = 0;
+let currentFileId = null;
 const ANNO_COLORS = ['#3b82f6','#ef4444','#f59e0b','#10b981','#8b5cf6','#ec4899','#06b6d4','#f97316'];
 
 // ===== File Panel Toggle =====
@@ -585,6 +731,39 @@ function toggleFilePanel(forceOpen) {
   } else {
     panel.classList.toggle('open');
   }
+}
+
+// ===== File Drive Navigation =====
+function openFile(fileId) {
+  currentFileId = fileId;
+  // Update file item active states
+  document.querySelectorAll('.file-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.file === fileId);
+  });
+
+  // Show file content, hide drive list
+  document.getElementById('fileDrive').style.display = 'none';
+  const fc = document.getElementById('fileContent');
+  fc.classList.add('visible');
+
+  // Update header
+  const backBtn = document.getElementById('backBtn');
+  backBtn.classList.add('visible');
+  const titles = {
+    'walk-weak': '故障诊断教材：挖掘机行走无力',
+    'engine-start': '故障诊断教材：发动机无法启动',
+    'hydraulic-noise': '故障诊断教材：液压系统异响',
+    'pump-arm': '剪枝规则库：泵车臂架抖动'
+  };
+  document.getElementById('panelTitle').textContent = titles[fileId] || '文件预览';
+}
+
+function showFileDrive() {
+  currentFileId = null;
+  document.getElementById('fileDrive').style.display = '';
+  document.getElementById('fileContent').classList.remove('visible');
+  document.getElementById('backBtn').classList.remove('visible');
+  document.getElementById('panelTitle').textContent = '会话文件';
 }
 
 // ===== Text Selection in File Content =====
@@ -905,8 +1084,56 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ===== Init: auto-open file panel =====
-setTimeout(() => toggleFilePanel(true), 500);
+// ===== Init: auto-open file panel to drive view =====
+setTimeout(() => {
+  toggleFilePanel(true);
+  simulateFileProgress();
+}, 500);
+
+// ===== Simulate file generation progress =====
+function simulateFileProgress() {
+  const progressBar = document.querySelector('.file-progress .bar');
+  if (!progressBar) return;
+  let progress = 65;
+  const interval = setInterval(() => {
+    progress += Math.random() * 8 + 2;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      const generatingItem = document.querySelector('.file-item[data-file="engine-start"]');
+      if (generatingItem) {
+        const iconWrap = generatingItem.querySelector('.file-icon-wrap');
+        iconWrap.classList.remove('generating');
+        iconWrap.classList.add('completed');
+        const spinner = iconWrap.querySelector('.gen-spinner');
+        if (spinner) spinner.remove();
+
+        const statusEl = generatingItem.querySelector('.file-status');
+        statusEl.classList.remove('generating');
+        statusEl.classList.add('completed');
+        statusEl.innerHTML = '<span class="status-dot"></span>已完成';
+
+        const progressContainer = generatingItem.querySelector('.file-progress');
+        if (progressContainer) progressContainer.remove();
+
+        const genSection = generatingItem.closest('.drive-section');
+        const completedSection = document.querySelectorAll('.drive-section')[1];
+        if (genSection && completedSection) {
+          completedSection.appendChild(generatingItem);
+          if (genSection.querySelectorAll('.file-item').length === 0) {
+            genSection.remove();
+          }
+        }
+        document.getElementById('driveBadge').textContent = '4 个文件';
+      }
+    }
+    progressBar.style.width = progress + '%';
+    const statusText = document.querySelector('.file-item[data-file="engine-start"] .file-status');
+    if (statusText && progress < 100) {
+      statusText.innerHTML = '<span class="status-dot"></span>生成中 ' + Math.round(progress) + '%';
+    }
+  }, 1200);
+}
 </script>
 </body>
 </html>
