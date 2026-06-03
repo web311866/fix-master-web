@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>反馈闭环设计系统 - 维修助手/专家标注平台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f5f7fa;--card:#fff;--border:#e2e8f0;--border-light:#f0f2f5;
+  --text:#1a202c;--text2:#4a5568;--text3:#94a3b8;
+  --primary:#2563eb;--primary-bg:#eff6ff;--primary-border:#bfdbfe;
+  --success:#16a34a;--success-bg:#f0fdf4;--success-border:#bbf7d0;
+  --warning:#d97706;--warning-bg:#fffbeb;--warning-border:#fde68a;
+  --danger:#dc2626;--danger-bg:#fef2f2;--danger-border:#fecaca;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-border:#ddd6fe;
+  --cyan:#0891b2;--cyan-bg:#ecfeff;--cyan-border:#a5f3fc;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+/* ===== TOP NAV ===== */
+.top-nav{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--primary)}
+.nav-brand .logo{width:28px;height:28px;background:linear-gradient(135deg,var(--primary),var(--purple));border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800}
+.nav-links{display:flex;gap:4px}
+.nav-links a{text-decoration:none;padding:6px 14px;border-radius:6px;font-size:13px;color:var(--text2);transition:.15s}
+.nav-links a:hover{background:var(--primary-bg);color:var(--primary)}
+.nav-links a.active{background:var(--primary);color:#fff}
+.nav-right{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text3)}
+
+/* ===== LAYOUT ===== */
+.app{display:flex;height:calc(100vh - 52px)}
+/* Left sidebar */
+.sidebar{width:220px;background:#fff;border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;overflow-y:auto}
+.sidebar-title{padding:4px 16px 10px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text3);letter-spacing:.5px}
+.sidebar-item{padding:8px 16px;font-size:13px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:8px;transition:.15s;border-left:3px solid transparent}
+.sidebar-item:hover{background:var(--primary-bg);color:var(--primary)}
+.sidebar-item.active{background:var(--primary-bg);color:var(--primary);border-left-color:var(--primary);font-weight:600}
+.sidebar-item .badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600}
+.sidebar-item .badge.blue{background:var(--primary)}
+.sidebar-item .badge.orange{background:var(--warning)}
+.sidebar-item .badge.green{background:var(--success)}
+.sidebar-divider{height:1px;background:var(--border);margin:8px 16px}
+
+/* Main content */
+.main{flex:1;overflow-y:auto;padding:24px}
+
+/* ===== CARDS ===== */
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card-subtitle{font-size:12px;color:var(--text3)}
+
+/* ===== TAGS / BADGES ===== */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.tag-danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+.tag-warning{background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border)}
+.tag-success{background:var(--success-bg);color:var(--success);border:1px solid var(--success-border)}
+.tag-primary{background:var(--primary-bg);color:var(--primary);border:1px solid var(--primary-border)}
+.tag-purple{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.tag-cyan{background:var(--cyan-bg);color:var(--cyan);border:1px solid var(--cyan-border)}
+
+/* ===== STATUS DOTS ===== */
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.status-dot.red{background:var(--danger)}
+.status-dot.orange{background:var(--warning)}
+.status-dot.green{background:var(--success)}
+.status-dot.blue{background:var(--primary)}
+.status-dot.purple{background:var(--purple)}
+.status-dot.gray{background:var(--text3)}
+
+/* ===== PIPELINE VISUALIZATION ===== */
+.pipeline{display:flex;align-items:stretch;gap:0;margin:20px 0 30px;overflow-x:auto;padding-bottom:8px}
+.pipeline-step{flex:1;min-width:140px;text-align:center;position:relative;padding:16px 8px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;transition:.2s;cursor:pointer}
+.pipeline-step:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(37,99,235,.1)}
+.pipeline-step.active{border-color:var(--primary);background:var(--primary-bg)}
+.pipeline-step.completed{border-color:var(--success)}
+.pipeline-step.completed .step-num{background:var(--success)}
+.pipeline-step.error-step{border-color:var(--danger)}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin:0 auto 8px}
+.step-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
+.step-desc{font-size:10px;color:var(--text3)}
+.step-status{margin-top:6px}
+.pipeline-arrow{display:flex;align-items:center;color:var(--text3);font-size:18px;padding:0 2px;flex-shrink:0}
+
+/* ===== DASHBOARD STATS ===== */
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.stat-num{font-size:28px;font-weight:700;line-height:1.2}
+.stat-num.blue{color:var(--primary)}.stat-num.orange{color:var(--warning)}.stat-num.red{color:var(--danger)}.stat-num.green{color:var(--success)}.stat-num.purple{color:var(--purple)}
+.stat-label{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* ===== TABLE ===== */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;background:var(--bg);font-weight:600;font-size:12px;color:var(--text2);border-bottom:2px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+tr:hover td{background:var(--primary-bg)}
+
+/* ===== TIMELINE ===== */
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.tl-item{position:relative;padding:0 0 20px 20px}
+.tl-item::before{content:'';position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--primary);background:#fff;z-index:1}
+.tl-item.success::before{border-color:var(--success);background:var(--success)}
+.tl-item.danger::before{border-color:var(--danger);background:var(--danger)}
+.tl-item.warning::before{border-color:var(--warning)}
+.tl-item.purple::before{border-color:var(--purple)}
+.tl-time{font-size:11px;color:var(--text3);margin-bottom:2px}
+.tl-content{font-size:13px;color:var(--text2);line-height:1.6}
+.tl-content strong{color:var(--text)}
+
+/* ===== FORM ===== */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.form-input,.form-textarea,.form-select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;transition:.15s;font-family:inherit}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-hint{font-size:11px;color:var(--text3);margin-top:2px}
+.form-row{display:flex;gap:12px}
+.form-row>*{flex:1}
+
+/* ===== BUTTONS ===== */
+.btn{padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--bg)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:#1d4ed8}
+.btn-success{background:var(--success);color:#fff;border-color:var(--success)}
+.btn-success:hover{background:#15803d}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-danger:hover{background:#b91c1c}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-ghost{border:none;background:transparent;color:var(--text2)}
+.btn-ghost:hover{background:var(--bg)}
+
+/* ===== DIALOG / CONVERSATION ===== */
+.dialog-area{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.dialog-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.dialog-body{padding:16px;max-height:400px;overflow-y:auto}
+.msg{margin-bottom:16px;display:flex;gap:10px}
+.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.msg-ai .msg-avatar{background:linear-gradient(135deg,var(--primary),var(--purple));color:#fff}
+.msg-user .msg-avatar{background:var(--success-bg);color:var(--success)}
+.msg-bubble{max-width:80%;padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.7}
+.msg-ai .msg-bubble{background:var(--bg);color:var(--text)}
+.msg-user .msg-bubble{background:var(--primary-bg);color:var(--text)}
+.msg-user{flex-direction:row-reverse}
+
+/* ===== TRACEABILITY PANEL ===== */
+.trace-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.trace-left,.trace-right{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.trace-section{padding:16px}
+.trace-section-title{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* Classification cards */
+.classify-card{border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;cursor:pointer;transition:.2s}
+.classify-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(37,99,235,.08)}
+.classify-card.selected{border-width:2px}
+.classify-card.type-a.selected{border-color:var(--purple);background:var(--purple-bg)}
+.classify-card.type-b.selected{border-color:var(--warning);background:var(--warning-bg)}
+.classify-card.type-c.selected{border-color:var(--danger);background:var(--danger-bg)}
+.classify-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.classify-type{font-size:14px;font-weight:700}
+.classify-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.classify-action{font-size:11px;color:var(--text3);margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)}
+
+/* ===== CONFLICT DETECTION ===== */
+.conflict-item{border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
+.conflict-item.conflict{border-color:var(--danger);background:var(--danger-bg)}
+.conflict-item.pass{border-color:var(--success);background:var(--success-bg)}
+.conflict-item.warn{border-color:var(--warning);background:var(--warning-bg)}
+.conflict-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.conflict-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.conflict-detail{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* ===== VERIFICATION RESULT ===== */
+.verify-result{display:flex;align-items:center;gap:16px;padding:16px;border-radius:8px;margin-bottom:12px}
+.verify-result.improved{background:var(--success-bg);border:1px solid var(--success-border)}
+.verify-result.degraded{background:var(--danger-bg);border:1px solid var(--danger-border)}
+.verify-result.same{background:var(--warning-bg);border:1px solid var(--warning-border)}
+.verify-metric{text-align:center;min-width:80px}
+.verify-metric .val{font-size:22px;font-weight:700}
+.verify-metric .label{font-size:10px;color:var(--text3)}
+.verify-arrow{font-size:20px;color:var(--text3)}
+.verify-change{font-size:13px;font-weight:600}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width .6s}
+.progress-fill.blue{background:var(--primary)}
+.progress-fill.green{background:var(--success)}
+.progress-fill.orange{background:var(--warning)}
+.progress-fill.red{background:var(--danger)}
+
+/* ===== EVIDENCE CARD ===== */
+.evidence-card{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;font-size:12px}
+.evidence-card .ev-label{font-weight:600;color:var(--text2);margin-bottom:4px}
+.evidence-card .ev-content{color:var(--text);line-height:1.5;background:var(--bg);padding:8px;border-radius:4px}
+
+/* ===== DETAIL PANEL (right side for traceability) ===== */
+.detail-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;position:sticky;top:0}
+
+/* ===== FLOW DIAGRAM ===== */
+.flow-box{display:inline-block;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;border:2px solid;min-width:100px}
+.flow-box.primary{border-color:var(--primary);color:var(--primary);background:var(--primary-bg)}
+.flow-box.purple{border-color:var(--purple);color:var(--purple);background:var(--purple-bg)}
+.flow-box.warning{border-color:var(--warning);color:var(--warning);background:var(--warning-bg)}
+.flow-box.danger{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+.flow-box.success{border-color:var(--success);color:var(--success);background:var(--success-bg)}
+.flow-box.cyan{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-bg)}
+.flow-diagram{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px}
+.flow-row{display:flex;align-items:center;gap:12px}
+.flow-arrow-down{color:var(--text3);font-size:16px}
+.flow-arrow-right{color:var(--text3);font-size:14px}
+.flow-branch{display:flex;gap:16px;justify-content:center}
+
+/* ===== ATTACHMENT ===== */
+.attachment-area{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;color:var(--text3);font-size:12px;cursor:pointer;transition:.15s}
+.attachment-area:hover{border-color:var(--primary);color:var(--primary)}
+.attachment-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.attachment-item{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;display:flex;align-items:center;gap:4px}
+.attachment-item .remove{cursor:pointer;color:var(--danger);font-weight:700}
+
+/* ===== TABS ===== */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:8px 16px;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
+.tab:hover{color:var(--primary)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){.sidebar{display:none}.stats-grid{grid-template-columns:repeat(3,1fr)}.trace-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr)}.pipeline{flex-wrap:wrap}.pipeline-arrow{display:none}}
+
+/* ===== VIEW SECTIONS ===== */
+.view-section{display:none}
+.view-section.active{display:block}
+
+/* Feedback form specific */
+.feedback-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.fb-type-card{border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:.2s}
+.fb-type-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(37,99,235,.1)}
+.fb-type-card.selected{border-width:2px}
+.fb-type-card.type-knowledge.selected{border-color:var(--purple);background:var(--purple-bg)}
+.fb-type-card.type-manual.selected{border-color:var(--warning);background:var(--warning-bg)}
+.fb-type-card.type-logic.selected{border-color:var(--danger);background:var(--danger-bg)}
+.fb-type-icon{font-size:24px;margin-bottom:6px}
+.fb-type-label{font-size:13px;font-weight:600}
+.fb-type-desc{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* AI judgment animation */
+.judgment-result{padding:16px;border-radius:8px;text-align:center;margin-top:16px;display:none}
+.judgment-result.valid{display:block;background:var(--success-bg);border:1px solid var(--success-border)}
+.judgment-result.invalid{display:block;background:var(--danger-bg);border:1px solid var(--danger-border)}
+.judgment-result .icon{font-size:32px;margin-bottom:8px}
+.judgment-result .title{font-size:15px;font-weight:700;margin-bottom:4px}
+.judgment-result .desc{font-size:12px;color:var(--text2)}
+
+/* Animated spinner */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Pulse dot */
+.pulse{animation:pulse-anim 2s infinite}
+@keyframes pulse-anim{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Compare view */
+.compare-cols{display:grid;grid-template-columns:1fr 40px 1fr;gap:0;align-items:stretch}
+.compare-col{border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;line-height:1.6}
+.compare-col.before{background:var(--danger-bg);border-color:var(--danger-border)}
+.compare-col.after{background:var(--success-bg);border-color:var(--success-border)}
+.compare-col .col-label{font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:8px}
+.compare-arrow{display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3)}
+.diff-del{text-decoration:line-through;color:var(--danger);background:rgba(220,38,38,.08);padding:1px 3px;border-radius:2px}
+.diff-add{color:var(--success);background:rgba(22,163,74,.08);padding:1px 3px;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ===== TOP NAV ===== -->
+<nav class="top-nav">
+  <div class="nav-brand">
+    <div class="logo">F</div>
+    反馈闭环设计系统
+  </div>
+  <div class="nav-links">
+    <a href="index.html">教材标注</a>
+    <a href="evaluate.html">教材评测</a>
+    <a href="annotate.html">批量批注</a>
+    <a href="feedback.html" class="active">反馈闭环</a>
+  </div>
+  <div class="nav-right">
+    <span>服务专家：王工</span>
+    <span style="color:var(--text3)">|</span>
+    <span>2026-06-02</span>
+  </div>
+</nav>
+
+<div class="app">
+  <!-- ===== LEFT SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-title">反馈闭环</div>
+    <div class="sidebar-item active" onclick="switchView('dashboard')">
+      <span>📊</span> 总览仪表盘
+      <span class="badge">12</span>
+    </div>
+    <div class="sidebar-item" onclick="switchView('feedback')">
+      <span>📝</span> 工程师反馈
+      <span class="badge blue">5</span>
+    </div>
+    <div class="sidebar-item" onclick="switchView('judgment')">
+      <span>🤖</span> AI初步判断
+      <span class="badge orange">3</span>
+    </div>
+    <div class="sidebar-item" onclick="switchView('traceability')">
+      <span>🔍</span> 专家溯源
+      <span class="badge">4</span>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-title">问题处理</div>
+    <div class="sidebar-item" onclick="switchView('classify')">
+      <span>📂</span> 问题分发
+      <span class="badge orange">2</span>
+    </div>
+    <div class="sidebar-item" onclick="switchView('conflict')">
+      <span>⚡</span> 冲突检测
+    </div>
+    <div class="sidebar-item" onclick="switchView('update')">
+      <span>📚</span> 知识更新
+      <span class="badge green">6</span>
+    </div>
+    <div class="sidebar-item" onclick="switchView('verify')">
+      <span>✅</span> 效果验证
+      <span class="badge green">3</span>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-title">统计</div>
+    <div class="sidebar-item" onclick="switchView('history')">
+      <span>📋</span> 历史记录
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main">
+
+    <!-- ============ DASHBOARD VIEW ============ -->
+    <div id="view-dashboard" class="view-section active">
+      <h2 style="font-size:18px;margin-bottom:4px">反馈闭环总览</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:20px">让AI诊断错误「有处可提、有人可改、有迹可查」</p>
+
+      <!-- Pipeline -->
+      <div class="pipeline" id="mainPipeline">
+        <div class="pipeline-step active" onclick="switchView('feedback')">
+          <div class="step-num">1</div>
+          <div class="step-label">工程师反馈</div>
+          <div class="step-desc">发起问题</div>
+          <div class="step-status"><span class="tag tag-danger">5 待处理</span></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" onclick="switchView('judgment')">
+          <div class="step-num">2</div>
+          <div class="step-label">AI初步判断</div>
+          <div class="step-desc">有效/无效筛选</div>
+          <div class="step-status"><span class="tag tag-warning">3 待判断</span></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" onclick="switchView('traceability')">
+          <div class="step-num">3</div>
+          <div class="step-label">专家溯源</div>
+          <div class="step-desc">分类定因</div>
+          <div class="step-status"><span class="tag tag-primary">4 待溯源</span></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" onclick="switchView('classify')">
+          <div class="step-num">4</div>
+          <div class="step-label">问题分发</div>
+          <div class="step-desc">A/B/C分类</div>
+          <div class="step-status"><span class="tag tag-purple">2 待分发</span></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" onclick="switchView('conflict')">
+          <div class="step-num">5</div>
+          <div class="step-label">冲突检测</div>
+          <div class="step-desc">知识一致性</div>
+          <div class="step-status"><span class="tag tag-success">通过</span></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step" onclick="switchView('update')">
+          <div class="step-num">6</div>
+          <div class="step-label">知识更新</div>
+          <div class="step-desc">教材/手册</div>
+          <div class="step-status"><span class="tag tag-success">6 已更新</span></div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step completed" onclick="switchView('verify')">
+          <div class="step-num">7</div>
+          <div class="step-label">效果验证</div>
+          <div class="step-desc">闭环完成</div>
+          <div class="step-status"><span class="tag tag-success">3 已验证</span></div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num blue">47</div><div class="stat-label">本月反馈总数</div></div>
+        <div class="stat-card"><div class="stat-num green">38</div><div class="stat-label">有效反馈</div></div>
+        <div class="stat-card"><div class="stat-num orange">9</div><div class="stat-label">无效反馈</div></div>
+        <div class="stat-card"><div class="stat-num purple">80.9%</div><div class="stat-label">有效率</div></div>
+        <div class="stat-card"><div class="stat-num red">4.2h</div><div class="stat-label">平均处理时长</div></div>
+      </div>
+
+      <!-- Recent feedbacks -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">最新反馈工单</div>
+          <button class="btn btn-sm" onclick="switchView('feedback')">查看全部</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>工单号</th><th>故障描述</th><th>工程师</th><th>反馈类型</th><th>当前环节</th><th>状态</th><th>时间</th></tr></thead>
+            <tbody id="dashboardTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Flow diagram -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">全链路流程图</div></div>
+        <div class="flow-diagram" style="align-items:stretch;gap:8px">
+          <div class="flow-row"><div class="flow-box primary">工程师发起反馈</div></div>
+          <div class="flow-arrow-down">↓</div>
+          <div class="flow-row"><div class="flow-box cyan">AI系统初步判断</div></div>
+          <div class="flow-arrow-down">↓</div>
+          <div class="flow-row"><div class="flow-box primary">服务专家溯源界面</div></div>
+          <div class="flow-arrow-down">↓</div>
+          <div class="flow-row" style="font-size:11px;color:var(--text3)">专家溯源判断：问题分类</div>
+          <div class="flow-branch">
+            <div style="text-align:center"><div class="flow-box purple">A类：知识盲区</div><div style="font-size:10px;color:var(--text3);margin-top:4px">触发新建教材</div></div>
+            <div style="text-align:center"><div class="flow-box warning">B类：手册错误</div><div style="font-size:10px;color:var(--text3);margin-top:4px">手册错误反馈</div></div>
+            <div style="text-align:center"><div class="flow-box danger">C类：排故思路错</div><div style="font-size:10px;color:var(--text3);margin-top:4px">教材标注流程</div></div>
+          </div>
+          <div class="flow-arrow-down">↓</div>
+          <div class="flow-row"><div class="flow-box cyan">统一冲突检测</div></div>
+          <div class="flow-arrow-down">↓</div>
+          <div class="flow-row"><div class="flow-box success">AI自动更新知识库</div></div>
+          <div class="flow-arrow-down">↓</div>
+          <div class="flow-row"><div class="flow-box success">诊断效果验证</div></div>
+          <div class="flow-arrow-down">↓</div>
+          <div class="flow-row"><div class="flow-box primary">闭环完成 ✓</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ FEEDBACK VIEW ============ -->
+    <div id="view-feedback" class="view-section">
+      <h2 style="font-size:18px;margin-bottom:4px">工程师反馈提交</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:20px">AI诊断完成后，工程师反馈遇到的问题</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <!-- Left: Feedback form -->
+        <div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">📝 反馈信息</div>
+
+            <div class="form-group">
+              <label class="form-label">工单号</label>
+              <input class="form-input" value="WD-20260602-006" readonly style="background:var(--bg)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">会话ID</label>
+              <input class="form-input" value="SES-20260602-0012" readonly style="background:var(--bg)">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">机型</label>
+                <input class="form-input" value="SY215C">
+              </div>
+              <div class="form-group">
+                <label class="form-label">故障类型</label>
+                <input class="form-input" value="发动机无法启动">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">故障描述 <span style="color:var(--danger)">*</span></label>
+              <textarea class="form-textarea" rows="3">AI诊断建议检查蓄电池电压和启动继电器，但实际故障是燃油泵供油不足，AI完全没提到燃油系统检查</textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">反馈类型</label>
+              <div class="feedback-type-grid">
+                <div class="fb-type-card type-knowledge selected" onclick="selectFbType(this,'knowledge')">
+                  <div class="fb-type-icon">🕳️</div>
+                  <div class="fb-type-label">知识盲区</div>
+                  <div class="fb-type-desc">知识库中缺失内容</div>
+                </div>
+                <div class="fb-type-card type-manual" onclick="selectFbType(this,'manual')">
+                  <div class="fb-type-icon">📖</div>
+                  <div class="fb-type-label">手册错误</div>
+                  <div class="fb-type-desc">手册内容有误/过期</div>
+                </div>
+                <div class="fb-type-card type-logic" onclick="selectFbType(this,'logic')">
+                  <div class="fb-type-icon">🧠</div>
+                  <div class="fb-type-label">排故思路错</div>
+                  <div class="fb-type-desc">诊断逻辑有问题</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">期望的正确结果</label>
+              <textarea class="form-textarea" rows="2" placeholder="描述您认为正确的诊断路径或结果...">应该优先检查燃油系统：燃油泵压力、燃油滤清器、喷油嘴状态</textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">附件截图（选填）</label>
+              <div class="attachment-area" onclick="addAttachment()">
+                📎 点击上传截图或拖拽文件到此处
+              </div>
+              <div class="attachment-list" id="attachmentList">
+                <div class="attachment-item">📷 故障截图_01.png <span class="remove" onclick="this.parentElement.remove()">✕</span></div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <button class="btn btn-primary" onclick="submitFeedback()">提交反馈</button>
+              <button class="btn" onclick="switchView('dashboard')">取消</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Conversation context -->
+        <div>
+          <div class="dialog-area">
+            <div class="dialog-header">
+              <span style="font-size:13px;font-weight:600">💬 诊断对话上下文</span>
+              <span class="tag tag-primary">会话 SES-20260602-0012</span>
+            </div>
+            <div class="dialog-body">
+              <div class="msg msg-user">
+                <div class="msg-avatar">李</div>
+                <div class="msg-bubble">SY215C挖掘机发动机无法启动，启动时电机转动正常但不着火</div>
+              </div>
+              <div class="msg msg-ai">
+                <div class="msg-avatar">AI</div>
+                <div class="msg-bubble">
+                  根据您的描述，建议按以下步骤排查：<br><br>
+                  <strong>1. 检查蓄电池电压</strong> — 确认电压≥24V<br>
+                  <strong>2. 检查启动继电器</strong> — 听是否有"咔嗒"声<br>
+                  <strong>3. 检查启动线路</strong> — 测量启动电流<br>
+                  <strong>4. 检查启动马达</strong> — 排除电刷磨损<br><br>
+                  置信度：<strong style="color:var(--warning)">58%</strong>
+                </div>
+              </div>
+              <div class="msg msg-user">
+                <div class="msg-avatar">李</div>
+                <div class="msg-bubble">以上都检查过了，都正常。但发现燃油泵压力不足，更换后问题解决</div>
+              </div>
+              <div class="msg msg-ai">
+                <div class="msg-avatar">AI</div>
+                <div class="msg-bubble">感谢您的反馈，我将记录此案例。燃油系统确实是无法启动的重要排查方向，当前教材中对此覆盖不足。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="card-title" style="margin-bottom:12px">📊 AI诊断置信度</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+              <span style="font-size:13px;min-width:70px">置信度</span>
+              <div class="progress-bar" style="flex:1"><div class="progress-fill orange" style="width:58%"></div></div>
+              <span style="font-size:13px;font-weight:700;color:var(--warning)">58%</span>
+            </div>
+            <p style="font-size:11px;color:var(--text3)">⚠️ 置信度低于60%，系统将自动标记为高优先级反馈</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ JUDGMENT VIEW ============ -->
+    <div id="view-judgment" class="view-section">
+      <h2 style="font-size:18px;margin-bottom:4px">AI初步判断</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:20px">系统自动分析反馈有效性，过滤无意义反馈，减少专家无效工作量</p>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchJudgeTab(this,'pending')">待判断 (3)</div>
+        <div class="tab" onclick="switchJudgeTab(this,'judged')">已判断 (8)</div>
+      </div>
+
+      <div id="judgePending">
+        <!-- Judge card 1 -->
+        <div class="card" id="judgeCard1">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="status-dot orange pulse"></span>
+              WD-20260602-004 — SY315 发动机异响
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-success" onclick="judgeFeedback('judgeCard1',true)">✓ 有效</button>
+              <button class="btn btn-sm btn-danger" onclick="judgeFeedback('judgeCard1',false)">✕ 无效</button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+            <div>
+              <div class="evidence-card">
+                <div class="ev-label">工程师反馈</div>
+                <div class="ev-content">AI建议检查气门间隙，但实际是喷油嘴堵塞导致异响，检查气门间隙浪费了大量时间</div>
+              </div>
+              <div class="evidence-card">
+                <div class="ev-label">AI诊断置信度</div>
+                <div class="ev-content" style="display:flex;align-items:center;gap:8px">
+                  <div class="progress-bar" style="flex:1"><div class="progress-fill orange" style="width:52%"></div></div>
+                  <span style="font-weight:700;color:var(--warning)">52%</span>
+                  <span class="tag tag-warning">低置信度</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text2)">AI判断依据</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.8">
+                ✓ 反馈内容长度充足（>5字）<br>
+                ✓ 无正向确认词<br>
+                ✓ 含具体技术描述<br>
+                ⚠️ 置信度 52% &lt; 60%<br>
+                <strong style="color:var(--primary)">→ 系统判定：疑似有效（高优先级）</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Judge card 2 -->
+        <div class="card" id="judgeCard2">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="status-dot orange pulse"></span>
+              WD-20260602-005 — SY135 行走跑偏
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-success" onclick="judgeFeedback('judgeCard2',true)">✓ 有效</button>
+              <button class="btn btn-sm btn-danger" onclick="judgeFeedback('judgeCard2',false)">✕ 无效</button>
+            </div>
+          </div>
+          <div class="evidence-card">
+            <div class="ev-label">工程师反馈</div>
+            <div class="ev-content">好的</div>
+          </div>
+          <div style="margin-top:8px;font-size:12px;color:var(--text2)">
+            ✗ 反馈内容长度不足（2字 &lt; 5字）<br>
+            ✗ 含正向确认词"好的"<br>
+            <strong style="color:var(--danger)">→ 系统判定：疑似无效</strong>
+          </div>
+        </div>
+
+        <!-- Judge card 3 -->
+        <div class="card" id="judgeCard3">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="status-dot orange pulse"></span>
+              WD-20260602-006 — SY215 发动机无法启动
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-success" onclick="judgeFeedback('judgeCard3',true)">✓ 有效</button>
+              <button class="btn btn-sm btn-danger" onclick="judgeFeedback('judgeCard3',false)">✕ 无效</button>
+            </div>
+          </div>
+          <div class="evidence-card">
+            <div class="ev-label">工程师反馈</div>
+            <div class="ev-content">AI诊断建议检查蓄电池电压和启动继电器，但实际故障是燃油泵供油不足，AI完全没提到燃油系统检查</div>
+          </div>
+          <div class="evidence-card">
+            <div class="ev-label">期望正确结果</div>
+            <div class="ev-content">应该优先检查燃油系统：燃油泵压力、燃油滤清器、喷油嘴状态</div>
+          </div>
+          <div style="margin-top:8px;font-size:12px;color:var(--text2)">
+            ✓ 反馈内容长度充足<br>
+            ✓ 无正向确认词<br>
+            ✓ 含具体技术描述 + 期望结果<br>
+            ⚠️ 置信度 58% &lt; 60%<br>
+            <strong style="color:var(--primary)">→ 系统判定：疑似有效（高优先级）</strong>
+          </div>
+        </div>
+      </div>
+
+      <div id="judgeJudged" style="display:none">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>工单号</th><th>工程师</th><th>反馈摘要</th><th>AI判断</th><th>专家Override</th><th>最终结果</th></tr></thead>
+            <tbody>
+              <tr><td>WD-20260602-001</td><td>张工</td><td>排故步骤遗漏液压系统检查</td><td><span class="tag tag-success">有效</span></td><td>—</td><td><span class="tag tag-success">有效</span></td></tr>
+              <tr><td>WD-20260602-002</td><td>刘工</td><td>好的</td><td><span class="tag tag-danger">无效</span></td><td>—</td><td><span class="tag tag-danger">无效</span></td></tr>
+              <tr><td>WD-20260602-003</td><td>陈工</td><td>参数值与手册不一致</td><td><span class="tag tag-success">有效</span></td><td>—</td><td><span class="tag tag-success">有效</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TRACEABILITY VIEW ============ -->
+    <div id="view-traceability" class="view-section">
+      <h2 style="font-size:18px;margin-bottom:4px">服务专家溯源 ⭐</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:20px">核心环节：溯源判断问题分类，确定责任方和处理路径</p>
+
+      <div class="trace-grid">
+        <!-- Left: Work order info + conversation trace -->
+        <div class="trace-left">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg)">
+            <span style="font-size:14px;font-weight:700">工单 WD-20260602-006</span>
+            <span class="tag tag-warning">待溯源</span>
+          </div>
+
+          <div class="trace-section">
+            <div class="trace-section-title">📋 工单信息</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+              <div><span style="color:var(--text3)">机型：</span>SY215C</div>
+              <div><span style="color:var(--text3)">故障：</span>发动机无法启动</div>
+              <div><span style="color:var(--text3)">工程师：</span>李工</div>
+              <div><span style="color:var(--text3)">时间：</span>2026-06-01 14:23</div>
+              <div><span style="color:var(--text3)">AI置信度：</span><span style="color:var(--warning);font-weight:600">58%</span></div>
+              <div><span style="color:var(--text3)">反馈类型：</span>排故思路错</div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border)"></div>
+
+          <div class="trace-section">
+            <div class="trace-section-title">💬 对话轨迹 <span style="font-size:11px;color:var(--text3);font-weight:400">时间轴视图</span></div>
+            <div class="timeline">
+              <div class="tl-item">
+                <div class="tl-time">14:23</div>
+                <div class="tl-content"><strong>[工程师]</strong> SY215C挖掘机发动机无法启动，启动时电机转动正常但不着火</div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-time">14:24</div>
+                <div class="tl-content"><strong>[AI]</strong> 建议排查：蓄电池电压 → 启动继电器 → 启动线路 → 启动马达 <span class="tag tag-warning" style="font-size:10px">置信度58%</span></div>
+              </div>
+              <div class="tl-item warning">
+                <div class="tl-time">14:45</div>
+                <div class="tl-content"><strong>[工程师]</strong> 以上都正常，发现燃油泵压力不足，更换后解决</div>
+              </div>
+              <div class="tl-item danger">
+                <div class="tl-time">14:46</div>
+                <div class="tl-content"><strong>[错误定位]</strong> AI遗漏了燃油系统检查步骤，排故思路仅聚焦启动系统 <span class="tag tag-danger" style="font-size:10px">关键错误</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border)"></div>
+
+          <div class="trace-section">
+            <div class="trace-section-title">📎 反馈证据</div>
+            <div class="evidence-card">
+              <div class="ev-label">工程师反馈文字</div>
+              <div class="ev-content">AI完全没提到燃油系统检查，实际故障是燃油泵供油不足</div>
+            </div>
+            <div class="evidence-card">
+              <div class="ev-label">期望正确结果</div>
+              <div class="ev-content">应优先检查燃油系统：燃油泵压力、燃油滤清器、喷油嘴状态</div>
+            </div>
+            <div class="evidence-card">
+              <div class="ev-label">附件</div>
+              <div class="ev-content">📷 故障截图_01.png</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Traceability classification -->
+        <div class="trace-right">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg)">
+            <span style="font-size:14px;font-weight:700">问题分类判定</span>
+          </div>
+
+          <div class="trace-section">
+            <div class="trace-section-title">请判断问题归属类别</div>
+
+            <div class="classify-card type-a" onclick="selectClassify(this,'A')">
+              <div class="classify-header">
+                <div class="classify-type" style="color:var(--purple)">A类：知识盲区</div>
+                <span class="tag tag-purple">需新建教材</span>
+              </div>
+              <div class="classify-desc">知识库中完全没有相关内容，AI无从获取正确知识。如：新机型、新故障类型未被收录。</div>
+              <div class="classify-action">→ 触发新建教材流程</div>
+            </div>
+
+            <div class="classify-card type-b" onclick="selectClassify(this,'B')">
+              <div class="classify-header">
+                <div class="classify-type" style="color:var(--warning)">B类：手册错误</div>
+                <span class="tag tag-warning">需修正手册</span>
+              </div>
+              <div class="classify-desc">知识来源（手册/教材）内容本身有误：参数错误、图纸过期、方法不适用。如：手册中蓄电池电压标准值过时。</div>
+              <div class="classify-action">→ 手册错误反馈（线下处理+记录）</div>
+            </div>
+
+            <div class="classify-card type-c selected" onclick="selectClassify(this,'C')">
+              <div class="classify-header">
+                <div class="classify-type" style="color:var(--danger)">C类：排故思路错</div>
+                <span class="tag tag-danger">需修改教材</span>
+              </div>
+              <div class="classify-desc">知识内容正确，但AI的排故思路/诊断逻辑不对。如：遗漏关键排查步骤、优先级错误、条件判断错误。</div>
+              <div class="classify-action">→ 进入教材标注/修改流程</div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border)"></div>
+
+          <div class="trace-section">
+            <div class="trace-section-title">✏️ 溯源分析（选填）</div>
+            <div class="form-group">
+              <label class="form-label">错误原因分析</label>
+              <textarea class="form-textarea" rows="3" placeholder="描述AI出错的具体原因...">教材中"发动机无法启动"的排查步骤仅覆盖启动系统，缺少燃油系统检查分支。剪枝规则中"可跳过燃油系统检查"导致AI在推理时跳过了关键排查方向。</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">影响范围评估</label>
+              <select class="form-select">
+                <option>仅影响当前故障类型</option>
+                <option selected>影响同一系统下的多个故障</option>
+                <option>影响多个系统的诊断逻辑</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">紧急程度</label>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-sm" onclick="this.classList.toggle('btn-danger')">低</button>
+                <button class="btn btn-sm btn-warning" style="background:var(--warning);color:#fff;border-color:var(--warning)">中</button>
+                <button class="btn btn-sm" onclick="this.classList.toggle('btn-danger')">高</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn" onclick="switchView('dashboard')">暂不处理</button>
+            <button class="btn btn-primary" onclick="submitTraceability()">确认分类并分发</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ CLASSIFY VIEW ============ -->
+    <div id="view-classify" class="view-section">
+      <h2 style="font-size:18px;margin-bottom:4px">问题分发</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:20px">根据问题分类，分发到对应的处理流程</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <!-- A类 -->
+        <div class="card" style="border-top:3px solid var(--purple)">
+          <div class="card-title" style="color:var(--purple)">A类：知识盲区</div>
+          <div class="card-subtitle" style="margin-bottom:16px">需新建教材</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px">当前待处理：<strong style="color:var(--purple)">1</strong></div>
+          <div class="classify-card" style="cursor:default">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span style="font-size:12px;font-weight:600">WD-20260602-003</span>
+              <span class="tag tag-purple">A类</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.5">SY485电控系统故障码P2048无对应教材</div>
+            <div style="margin-top:8px"><button class="btn btn-sm" onclick="alert('将跳转至教材标注页面，新建教材')">→ 新建教材</button></div>
+          </div>
+        </div>
+
+        <!-- B类 -->
+        <div class="card" style="border-top:3px solid var(--warning)">
+          <div class="card-title" style="color:var(--warning)">B类：手册错误</div>
+          <div class="card-subtitle" style="margin-bottom:16px">需修正手册</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px">当前待处理：<strong style="color:var(--warning)">0</strong></div>
+          <div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">暂无待处理工单</div>
+          <div style="font-size:11px;color:var(--text3);border-top:1px dashed var(--border);padding-top:8px;margin-top:8px">已处理：3件 | 平均处理时长：2.1天</div>
+        </div>
+
+        <!-- C类 -->
+        <div class="card" style="border-top:3px solid var(--danger)">
+          <div class="card-title" style="color:var(--danger)">C类：排故思路错</div>
+          <div class="card-subtitle" style="margin-bottom:16px">需修改教材</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px">当前待处理：<strong style="color:var(--danger)">1</strong></div>
+          <div class="classify-card" style="cursor:default">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span style="font-size:12px;font-weight:600">WD-20260602-006</span>
+              <span class="tag tag-danger">C类</span>
+            </div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.5">发动机无法启动 - 遗漏燃油系统检查步骤</div>
+            <div style="margin-top:8px"><button class="btn btn-sm" onclick="alert('将跳转至教材标注页面，修改现有教材')">→ 修改教材</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ CONFLICT VIEW ============ -->
+    <div id="view-conflict" class="view-section">
+      <h2 style="font-size:18px;margin-bottom:4px">统一冲突检测</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:20px">知识更新前，检测与其他教材/手册的冲突，确保知识一致性</p>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">冲突检测报告</div>
+          <div style="display:flex;gap:8px">
+            <span class="tag tag-success">2 通过</span>
+            <span class="tag tag-warning">1 警告</span>
+            <span class="tag tag-danger">1 冲突</span>
+          </div>
+        </div>
+
+        <div class="conflict-item pass">
+          <div class="conflict-header">
+            <div class="conflict-title"><span style="color:var(--success)">✓</span> 根因列表一致性</div>
+            <span class="tag tag-success">通过</span>
+          </div>
+          <div class="conflict-detail">新增根因"燃油泵供油不足"与现有根因无重复，无冲突</div>
+        </div>
+
+        <div class="conflict-item warn">
+          <div class="conflict-header">
+            <div class="conflict-title"><span style="color:var(--warning)">⚠</span> 剪枝规则关联性</div>
+            <span class="tag tag-warning">警告</span>
+          </div>
+          <div class="conflict-detail">
+            修改"发动机无法启动"的剪枝规则后，以下教材可能受影响：<br>
+            · 《故障诊断教材-整车无力》v1.0 — 共享剪枝规则"可跳过燃油系统"<br>
+            · 《故障诊断教材-工作装置无力》v1.0 — 引用同一诊断逻辑<br>
+            <strong>建议：</strong>联动检查以上教材是否需要同步修改
+          </div>
+        </div>
+
+        <div class="conflict-item conflict">
+          <div class="conflict-header">
+            <div class="conflict-title"><span style="color:var(--danger)">✗</span> 手册参数冲突</div>
+            <span class="tag tag-danger">冲突</span>
+          </div>
+          <div class="conflict-detail">
+            教材中新增"燃油泵标准压力：25±2MPa"，但手册中记录为"燃油泵标准压力：22±2MPa"<br>
+            <strong>冲突来源：</strong>《SY215C维修手册》第3章第2节<br>
+            <strong>需确认：</strong>以哪个为准？确认后自动同步另一处
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="btn btn-sm btn-primary" onclick="alert('选择教材值，将生成手册修订任务')">采用教材值（25MPa）</button>
+            <button class="btn btn-sm" onclick="alert('选择手册值，将回退教材修改')">采用手册值（22MPa）</button>
+          </div>
+        </div>
+
+        <div class="conflict-item pass">
+          <div class="conflict-header">
+            <div class="conflict-title"><span style="color:var(--success)">✓</span> 诊断路径逻辑性</div>
+            <span class="tag tag-success">通过</span>
+          </div>
+          <div class="conflict-detail">修改后的排查步骤逻辑通顺，无循环依赖或死路径</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ UPDATE VIEW ============ -->
+    <div id="view-update" class="view-section">
+      <h2 style="font-size:18px;margin-bottom:4px">知识更新</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:20px">冲突检测通过后，AI自动更新知识库（教材 + 手册）</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <!-- Left: Update tasks -->
+        <div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">📚 更新任务列表</div>
+
+            <div style="border:1px solid var(--success-border);border-radius:8px;padding:14px;margin-bottom:10px;background:var(--success-bg)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:600">教材修改：发动机无法启动</span>
+                <span class="tag tag-success">已完成</span>
+              </div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.5">
+                · 新增根因：燃油泵供油不足<br>
+                · 修改剪枝规则：删除"可跳过燃油系统"<br>
+                · 新增排查步骤：燃油系统检查分支
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">版本：v1.0 → v1.1 | 更新时间：2026-06-02 10:30</div>
+            </div>
+
+            <div style="border:1px solid var(--success-border);border-radius:8px;padding:14px;margin-bottom:10px;background:var(--success-bg)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:600">教材修改：整车无力</span>
+                <span class="tag tag-success">已完成</span>
+              </div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.5">
+                · 联动修改：同步更新剪枝规则<br>
+                · 修改排查步骤：增加燃油系统前置检查
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">版本：v1.0 → v1.1 | 更新时间：2026-06-02 10:35</div>
+            </div>
+
+            <div style="border:1px solid var(--primary-border);border-radius:8px;padding:14px;margin-bottom:10px;background:var(--primary-bg)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:600">手册修订：SY215C维修手册</span>
+                <span class="tag tag-primary">处理中</span>
+              </div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.5">
+                · 参数修正：燃油泵标准压力 22→25MPa<br>
+                · 待线下确认后更新
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+                <div class="progress-bar" style="flex:1"><div class="progress-fill blue" style="width:60%"></div></div>
+                <span style="font-size:11px;color:var(--primary)">60%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Compare view -->
+        <div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">📄 变更对比：发动机无法启动 v1.0 → v1.1</div>
+
+            <div style="margin-bottom:12px">
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px">根因列表变更</div>
+              <div class="compare-cols">
+                <div class="compare-col before">
+                  <div class="col-label" style="color:var(--danger)">修改前 v1.0</div>
+                  1. 蓄电池亏电<br>
+                  2. 启动继电器故障<br>
+                  3. 启动线路断路<br>
+                  4. <span class="diff-del">启动马达损坏</span><br>
+                  5. 启动马达损坏（电刷磨损）
+                </div>
+                <div class="compare-arrow">→</div>
+                <div class="compare-col after">
+                  <div class="col-label" style="color:var(--success)">修改后 v1.1</div>
+                  1. 蓄电池亏电<br>
+                  2. 启动继电器故障<br>
+                  3. 启动线路断路<br>
+                  4. 启动马达损坏（电刷磨损）<br>
+                  5. <span class="diff-add">燃油泵供油不足</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:12px">
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px">剪枝规则变更</div>
+              <div class="compare-cols">
+                <div class="compare-col before">
+                  <div class="col-label" style="color:var(--danger)">修改前 v1.0</div>
+                  ❌可跳过：<span class="diff-del">燃油系统</span>、进气系统<br>
+                  ✅优先检查：蓄电池电压、启动继电器
+                </div>
+                <div class="compare-arrow">→</div>
+                <div class="compare-col after">
+                  <div class="col-label" style="color:var(--success)">修改后 v1.1</div>
+                  ❌可跳过：进气系统<br>
+                  ✅优先检查：蓄电池电压、<span class="diff-add">燃油泵压力</span>、启动继电器
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px">排查步骤变更</div>
+              <div class="compare-cols">
+                <div class="compare-col before">
+                  <div class="col-label" style="color:var(--danger)">修改前 v1.0</div>
+                  步骤1→蓄电池 → 步骤2→继电器 → 步骤3→<span class="diff-del">线路 → 步骤4→马达</span>
+                </div>
+                <div class="compare-arrow">→</div>
+                <div class="compare-col after">
+                  <div class="col-label" style="color:var(--success)">修改后 v1.1</div>
+                  步骤1→蓄电池 → 步骤2→<span class="diff-add">燃油泵 → 步骤3→燃油滤清器</span> → 步骤4→继电器 → 步骤5→线路
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ VERIFY VIEW ============ -->
+    <div id="view-verify" class="view-section">
+      <h2 style="font-size:18px;margin-bottom:4px">诊断效果验证</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:20px">知识更新后，通过AgentGym仿真验证诊断效果是否改善</p>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">验证报告：发动机无法启动 v1.1</div>
+          <span class="tag tag-success">验证通过</span>
+        </div>
+
+        <!-- Before/After comparison -->
+        <div class="verify-result improved">
+          <div class="verify-metric">
+            <div class="val" style="color:var(--danger)">58%</div>
+            <div class="label">修改前诊断准确率</div>
+          </div>
+          <div class="verify-arrow">→</div>
+          <div class="verify-metric">
+            <div class="val" style="color:var(--success)">87%</div>
+            <div class="label">修改后诊断准确率</div>
+          </div>
+          <div class="verify-arrow" style="width:40px"></div>
+          <div>
+            <div class="verify-change" style="color:var(--success)">↑ +29%</div>
+            <div style="font-size:11px;color:var(--text3)">显著改善</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px">
+          <div style="text-align:center;padding:12px;border-radius:8px;background:var(--success-bg)">
+            <div style="font-size:22px;font-weight:700;color:var(--success)">+29%</div>
+            <div style="font-size:11px;color:var(--text3)">诊断准确率</div>
+          </div>
+          <div style="text-align:center;padding:12px;border-radius:8px;background:var(--success-bg)">
+            <div style="font-size:22px;font-weight:700;color:var(--success)">-3步</div>
+            <div style="font-size:11px;color:var(--text3)">平均排查步骤</div>
+          </div>
+          <div style="text-align:center;padding:12px;border-radius:8px;background:var(--success-bg)">
+            <div style="font-size:22px;font-weight:700;color:var(--success)">-15min</div>
+            <div style="font-size:11px;color:var(--text3)">平均排查时长</div>
+          </div>
+          <div style="text-align:center;padding:12px;border-radius:8px;background:var(--success-bg)">
+            <div style="font-size:22px;font-weight:700;color:var(--success)">0</div>
+            <div style="font-size:11px;color:var(--text3)">新增安全风险</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AgentGym test cases -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🧪 AgentGym仿真测试用例</div>
+          <div style="display:flex;gap:6px">
+            <span class="tag tag-success">5 通过</span>
+            <span class="tag tag-warning">1 部分</span>
+            <span class="tag tag-danger">0 失败</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>用例</th><th>故障场景</th><th>修改前</th><th>修改后</th><th>结果</th></tr></thead>
+            <tbody>
+              <tr><td>TC-001</td><td>燃油泵压力不足</td><td><span style="color:var(--danger)">未识别</span></td><td><span style="color:var(--success)">3步定位</span></td><td><span class="tag tag-success">改善</span></td></tr>
+              <tr><td>TC-002</td><td>燃油滤清器堵塞</td><td><span style="color:var(--danger)">未识别</span></td><td><span style="color:var(--success)">4步定位</span></td><td><span class="tag tag-success">改善</span></td></tr>
+              <tr><td>TC-003</td><td>蓄电池亏电</td><td><span style="color:var(--success)">1步定位</span></td><td><span style="color:var(--success)">1步定位</span></td><td><span class="tag tag-primary">不变</span></td></tr>
+              <tr><td>TC-004</td><td>启动继电器故障</td><td><span style="color:var(--success)">2步定位</span></td><td><span style="color:var(--success)">3步定位</span></td><td><span class="tag tag-warning">略增</span></td></tr>
+              <tr><td>TC-005</td><td>喷油嘴堵塞</td><td><span style="color:var(--danger)">未识别</span></td><td><span style="color:var(--success)">5步定位</span></td><td><span class="tag tag-success">改善</span></td></tr>
+              <tr><td>TC-006</td><td>启动马达损坏</td><td><span style="color:var(--success)">3步定位</span></td><td><span style="color:var(--success)">4步定位</span></td><td><span class="tag tag-warning">略增</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Close the loop -->
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:36px;margin-bottom:8px">✅</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:4px">反馈闭环完成</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">WD-20260602-006 | 发动机无法启动 | 排故思路错 → 教材v1.1 → 诊断准确率↑29%</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn btn-primary" onclick="switchView('dashboard')">返回总览</button>
+          <button class="btn" onclick="switchView('feedback')">处理下一个反馈</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ HISTORY VIEW ============ -->
+    <div id="view-history" class="view-section">
+      <h2 style="font-size:18px;margin-bottom:4px">历史记录</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:20px">所有反馈工单的完整处理记录</p>
+
+      <div class="card">
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <input class="form-input" style="width:200px" placeholder="搜索工单号/故障描述...">
+          <select class="form-select" style="width:120px"><option>全部类型</option><option>A类：知识盲区</option><option>B类：手册错误</option><option>C类：排故思路错</option></select>
+          <select class="form-select" style="width:120px"><option>全部状态</option><option>处理中</option><option>已完成</option><option>已关闭</option></select>
+          <button class="btn btn-primary btn-sm">搜索</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>工单号</th><th>故障描述</th><th>工程师</th><th>分类</th><th>处理结果</th><th>耗时</th><th>状态</th><th>完成时间</th></tr></thead>
+            <tbody>
+              <tr><td>WD-20260602-006</td><td>发动机无法启动-遗漏燃油系统</td><td>李工</td><td><span class="tag tag-danger">C类</span></td><td>教材v1.1更新，准确率↑29%</td><td>4.2h</td><td><span class="tag tag-success">已完成</span></td><td>06-02 10:30</td></tr>
+              <tr><td>WD-20260602-003</td><td>电控系统故障码P2048无教材</td><td>陈工</td><td><span class="tag tag-purple">A类</span></td><td>新建教材v1.0</td><td>8.5h</td><td><span class="tag tag-success">已完成</span></td><td>06-01 16:00</td></tr>
+              <tr><td>WD-20260602-001</td><td>排故步骤遗漏液压系统</td><td>张工</td><td><span class="tag tag-danger">C类</span></td><td>教材v1.2更新</td><td>3.1h</td><td><span class="tag tag-success">已完成</span></td><td>05-31 14:20</td></tr>
+              <tr><td>WD-20260530-012</td><td>手册参数值与实际不符</td><td>赵工</td><td><span class="tag tag-warning">B类</span></td><td>手册已修正</td><td>2.1天</td><td><span class="tag tag-success">已完成</span></td><td>05-30 09:00</td></tr>
+              <tr><td>WD-20260528-008</td><td>行走跑偏诊断路径错误</td><td>刘工</td><td><span class="tag tag-danger">C类</span></td><td>教材v2.0更新</td><td>6.8h</td><td><span class="tag tag-success">已完成</span></td><td>05-28 17:45</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">📊 本月统计</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+          <div style="text-align:center;padding:16px;border-radius:8px;background:var(--purple-bg)">
+            <div style="font-size:24px;font-weight:700;color:var(--purple)">12</div>
+            <div style="font-size:11px;color:var(--text3)">A类（知识盲区）</div>
+          </div>
+          <div style="text-align:center;padding:16px;border-radius:8px;background:var(--warning-bg)">
+            <div style="font-size:24px;font-weight:700;color:var(--warning)">8</div>
+            <div style="font-size:11px;color:var(--text3)">B类（手册错误）</div>
+          </div>
+          <div style="text-align:center;padding:16px;border-radius:8px;background:var(--danger-bg)">
+            <div style="font-size:24px;font-weight:700;color:var(--danger)">18</div>
+            <div style="font-size:11px;color:var(--text3)">C类（排故思路错）</div>
+          </div>
+          <div style="text-align:center;padding:16px;border-radius:8px;background:var(--success-bg)">
+            <div style="font-size:24px;font-weight:700;color:var(--success)">87%</div>
+            <div style="font-size:11px;color:var(--text3)">闭环完成率</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ===== View switching =====
+function switchView(view) {
+  document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('view-' + view);
+  if (el) el.classList.add('active');
+  // Highlight sidebar
+  const map = {dashboard:0,feedback:1,judgment:2,traceability:3,classify:4,conflict:5,update:6,verify:7,history:8};
+  const items = document.querySelectorAll('.sidebar-item');
+  if (map[view] !== undefined && items[map[view]]) items[map[view]].classList.add('active');
+}
+
+// ===== Dashboard table =====
+const dashboardData = [
+  {id:'WD-20260602-006',fault:'发动机无法启动-遗漏燃油系统',engineer:'李工',type:'C类',typeClass:'tag-danger',stage:'专家溯源',stageClass:'tag-primary',status:'处理中',statusClass:'tag-warning',time:'06-01 14:23'},
+  {id:'WD-20260602-005',fault:'行走跑偏',engineer:'刘工',type:'待判断',typeClass:'tag-primary',stage:'AI判断',stageClass:'tag-cyan',status:'待处理',statusClass:'tag-warning',time:'06-01 11:00'},
+  {id:'WD-20260602-004',fault:'发动机异响',engineer:'张工',type:'待判断',typeClass:'tag-primary',stage:'AI判断',stageClass:'tag-cyan',status:'待处理',statusClass:'tag-warning',time:'06-01 09:30'},
+  {id:'WD-20260602-003',fault:'电控系统故障码P2048',engineer:'陈工',type:'A类',typeClass:'tag-purple',stage:'知识更新',stageClass:'tag-success',status:'已完成',statusClass:'tag-success',time:'05-31 16:00'},
+  {id:'WD-20260602-001',fault:'排故步骤遗漏液压系统',engineer:'张工',type:'C类',typeClass:'tag-danger',stage:'效果验证',stageClass:'tag-success',status:'已完成',statusClass:'tag-success',time:'05-31 10:00'},
+];
+(function renderTable(){
+  const tbody = document.getElementById('dashboardTable');
+  dashboardData.forEach(d => {
+    tbody.innerHTML += `<tr><td style="font-weight:600">${d.id}</td><td>${d.fault}</td><td>${d.engineer}</td><td><span class="tag ${d.typeClass}">${d.type}</span></td><td><span class="tag ${d.stageClass}">${d.stage}</span></td><td><span class="tag ${d.statusClass}">${d.status}</span></td><td style="color:var(--text3)">${d.time}</td></tr>`;
+  });
+})();
+
+// ===== Feedback type selection =====
+function selectFbType(el, type) {
+  document.querySelectorAll('.fb-type-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ===== Submit feedback =====
+function submitFeedback() {
+  alert('反馈已提交！系统将进行AI初步判断，请稍后查看结果。');
+  switchView('judgment');
+}
+
+// ===== Add attachment =====
+function addAttachment() {
+  const list = document.getElementById('attachmentList');
+  const name = '截图_' + (list.children.length + 1) + '.png';
+  list.innerHTML += `<div class="attachment-item">📷 ${name} <span class="remove" onclick="this.parentElement.remove()">✕</span></div>`;
+}
+
+// ===== Judge tabs =====
+function switchJudgeTab(tab, type) {
+  document.querySelectorAll('#view-judgment .tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById('judgePending').style.display = type === 'pending' ? 'block' : 'none';
+  document.getElementById('judgeJudged').style.display = type === 'judged' ? 'block' : 'none';
+}
+
+// ===== Judge feedback =====
+function judgeFeedback(cardId, valid) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const dot = card.querySelector('.status-dot');
+  if (dot) { dot.classList.remove('pulse','orange'); dot.classList.add(valid ? 'green' : 'gray'); }
+  const btns = card.querySelector('.card-header > div:last-child');
+  if (btns) btns.innerHTML = valid ? '<span class="tag tag-success">✓ 有效</span>' : '<span class="tag tag-danger">✕ 无效</span>';
+  // Add judgment note
+  const note = document.createElement('div');
+  note.style.cssText = 'margin-top:10px;padding:8px 12px;border-radius:6px;font-size:12px;' + (valid ? 'background:var(--success-bg);color:var(--success);border:1px solid var(--success-border)' : 'background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)');
+  note.textContent = valid ? '✓ 已判定为有效反馈，将进入专家溯源队列' : '✕ 已判定为无效反馈（工程师操作失误/重复提交），流程结束';
+  card.appendChild(note);
+}
+
+// ===== Classify selection =====
+function selectClassify(el, type) {
+  document.querySelectorAll('.classify-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ===== Submit traceability =====
+function submitTraceability() {
+  const selected = document.querySelector('.classify-card.selected');
+  if (!selected) { alert('请选择问题分类'); return; }
+  const type = selected.classList.contains('type-a') ? 'A类' : selected.classList.contains('type-b') ? 'B类' : 'C类';
+  alert('溯源完成！问题分类为' + type + '，已分发到对应处理流程。');
+  switchView('classify');
+}
+</script>
+</body>
+</html>
